@@ -112,15 +112,21 @@
   .iconBtn{ width:38px; height:38px; border-radius:12px; border:1.5px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
   .headRow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 
-  /* collections folders */
-  .folder{ position:relative; margin-top:20px; border-radius:16px; padding:18px 18px 16px; cursor:pointer; min-height:96px;
-    box-shadow:0 4px 14px rgba(35,33,28,.07); transition:transform .15s; overflow:hidden; }
+  /* collections folders — video jaisa: tab wala folder, upar se jhaankte stamps, frosted glass front */
+  .folder{ position:relative; margin-top:24px; cursor:pointer; height:126px; transition:transform .15s; }
   .folder:hover{ transform:translateY(-2px); }
-  .folder::before{ content:""; position:absolute; top:-13px; left:0; width:112px; height:16px; border-radius:9px 13px 0 0; background:inherit; filter:brightness(.96); }
+  .folder .front{ position:absolute; left:0; right:0; top:42px; bottom:0; z-index:2; border-radius:15px; padding:13px 16px;
+    backdrop-filter:blur(13px) saturate(1.3); -webkit-backdrop-filter:blur(13px) saturate(1.3);
+    box-shadow:0 12px 26px rgba(35,33,28,.12), inset 0 1px 0 rgba(255,255,255,.55); }
+  .folder .front::before{ content:""; position:absolute; top:-9px; left:15px; width:86px; height:11px; border-radius:8px 11px 0 0; background:inherit; }
   .folder h3{ font-size:17.5px; font-weight:800; position:relative; }
   .folder p{ font-size:13px; color:#6d6a5e; font-weight:600; position:relative; }
-  .folder .fimgs{ position:absolute; right:8px; top:0; bottom:0; display:flex; align-items:center; gap:5px; opacity:.75; }
-  .folder .fimgs img{ width:58px; height:72px; object-fit:cover; border-radius:3px; transform:rotate(3deg); filter:blur(.6px) saturate(1.05); }
+  .folder .fimgs{ position:absolute; right:16px; top:0; z-index:1; display:flex; }
+  .folder .fimgs img{ width:60px; height:78px; object-fit:cover; border-radius:4px; box-shadow:0 5px 12px rgba(35,33,28,.22); margin-left:-15px; }
+  .folder .fimgs img:first-child{ margin-left:0; }
+  .folder .fimgs img:nth-child(1){ transform:rotate(-7deg) translateY(3px); }
+  .folder .fimgs img:nth-child(2){ transform:rotate(3deg); }
+  .folder .fimgs img:nth-child(3){ transform:rotate(9deg) translateY(4px); }
   #fab{ position:absolute; right:20px; bottom:104px; width:58px; height:58px; border-radius:50%; background:#17150f; color:#fff;
     font-size:30px; border:none; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.3); z-index:8; }
 
@@ -417,6 +423,10 @@
     background-repeat:repeat-x, repeat-x, repeat-y, repeat-y;
     background-position:top left, bottom left, top left, top right; }
   #filmView.stampMode .perfCut{ display:block; }
+  /* ---------- v20: folder grid view adjustments ---------- */
+  #folderList.gridView .folder{ height:122px; margin:0; }
+  #folderList.gridView .folder .front{ top:40px; }
+  #folderList.gridView .folder .fimgs img{ width:50px; height:66px; }
 </style>
 </head>
 <body>
@@ -1208,14 +1218,15 @@ $('#viewListBtn').onclick=()=>{ collView='list'; localStorage.setItem('snapmark_
 function renderFolders(){
   const list=$('#folderList'); list.innerHTML=''; applyCollView();
   let fi=0;
+  const rgba=(hex,a)=>{ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
   const mk=(name, title, bg, imgs)=>{
-    const d=document.createElement('div'); d.className='folder'; d.style.background=bg; d.style.animationDelay=(fi++*0.06)+'s';
-    d.innerHTML=`<h3>${title}</h3><p>${collCount(name)} stamps</p>`+
-      (imgs? `<div class="fimgs">${imgs.map(i=>`<img src="${i}">`).join('')}</div>`:'');
+    const d=document.createElement('div'); d.className='folder'; d.style.animationDelay=(fi++*0.06)+'s';
+    d.innerHTML=(imgs&&imgs.length? `<div class="fimgs">${imgs.map(i=>`<img src="${i}">`).join('')}</div>`:'')+
+      `<div class="front" style="background:${rgba(bg,.68)}"><h3>${title}</h3><p>${collCount(name)} stamps</p></div>`;
     d.onclick=()=>openGrid(name); list.appendChild(d);
   };
-  mk('__all','All Stamps','linear-gradient(100deg,#e8e2d2,#dfe5da)', stamps.slice(0,3).map(s=>s.img));
-  colls.forEach((c,i)=>mk(c, c, PALETTE[i%PALETTE.length], null));
+  mk('__all','All Stamps','#e6dfca', stamps.slice(0,3).map(s=>s.img));
+  colls.forEach((c,i)=>mk(c, c, PALETTE[i%PALETTE.length], stamps.filter(s=>s.coll===c).slice(0,3).map(s=>s.img)));
 }
 $('#fab').onclick=async()=>{
   const name=await askText('New collection', 'Collection name', 'e.g. Goa Trip, New York, Family', 'Create');
