@@ -41,15 +41,10 @@
     background:linear-gradient(155deg,#ececf0,#b9b9c1 34%,#f4f4f7 54%,#a6a6b0 80%,#d5d5dc);
     box-shadow:0 28px 55px rgba(0,0,0,.5), inset 0 2px 4px #fff, inset 0 -5px 10px rgba(0,0,0,.32); transition:transform .12s ease; }
   #metal.press{ transform:translateY(10px) scale(.99); }
-  #filmFrame{ position:relative; border-radius:10px; background:#0b0b0c; padding:13px 21px; box-shadow:inset 0 0 0 2px #2e2e30, inset 0 6px 14px rgba(0,0,0,.85); overflow:hidden; }
-  #filmFrame::before,#filmFrame::after{ content:""; position:absolute; top:9px; bottom:9px; width:10px;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 19'%3E%3Crect x='1.4' y='4.5' width='7.2' height='10' rx='1.6' fill='%234c4c51'/%3E%3C/svg%3E");
-    background-size:10px 19px; background-repeat:repeat-y; }
-  #filmFrame::before{ left:5px; } #filmFrame::after{ right:5px; }
-  #filmView{ position:relative; width:100%; aspect-ratio:1/1.06; border-radius:3px; overflow:hidden; background:#fdfcf6;
-    box-shadow:inset 0 0 0 1px #d8d2c0; }
+  #filmFrame{ position:relative; border-radius:14px; background:#0b0b0c; padding:10px; box-shadow:inset 0 0 0 2px #2e2e30, inset 0 6px 14px rgba(0,0,0,.85); overflow:hidden; }
+  #filmView{ position:relative; width:100%; aspect-ratio:1/1.06; border-radius:8px; overflow:hidden; background:#fdfcf6; }
   #filmView.sq{ aspect-ratio:1/1; } #filmView.wide{ aspect-ratio:1.28/1; }
-  #mediaBox{ position:absolute; inset:13px; overflow:hidden; border-radius:2px; background:#e9e2cf; }
+  #mediaBox{ position:absolute; inset:0; overflow:hidden; border-radius:8px; background:#e9e2cf; }
   #mediaBox video,#mediaBox img{ width:100%; height:100%; object-fit:cover; display:block; }
   #mediaBox .fvEmpty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#8a7f63;
     font-family:'Caveat',cursive; font-size:24px; text-align:center; padding:10px; }
@@ -427,7 +422,7 @@
       <div id="cutterWrap">
         <div id="metal">
           <div id="filmFrame">
-            <div id="filmView"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div><div class="perf"></div></div>
+            <div id="filmView"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div></div>
             <div id="filmLogo">S N A P M A R K</div>
           </div>
         </div>
@@ -1083,7 +1078,7 @@ function cropDraw(x, el, isVideo, dx, dy, dw, dh, zoomF){
 }
 function scallop(x,W,H){
   x.globalCompositeOperation='destination-out';
-  const r=19, step=30;
+  const r=15.5, step=26;
   for(let hx=6; hx<W; hx+=step){ x.beginPath(); x.arc(hx,0,r,0,7); x.fill(); x.beginPath(); x.arc(hx,H,r,0,7); x.fill(); }
   for(let hy=6; hy<H; hy+=step){ x.beginPath(); x.arc(0,hy,r,0,7); x.fill(); x.beginPath(); x.arc(W,hy,r,0,7); x.fill(); }
   x.globalCompositeOperation='source-over';
