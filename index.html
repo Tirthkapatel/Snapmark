@@ -237,7 +237,7 @@
     background-size:19px 12px, 19px 12px, 12px 19px, 12px 19px;
     background-position:0 0, 0 100%, 0 0, 100% 0;
     background-repeat:repeat-x, repeat-x, repeat-y, repeat-y; }
-  .postmark{ position:absolute; top:-34px; right:-20px; width:104px; height:104px; color:var(--accent); opacity:.5;
+  .postmark{ position:absolute; top:-38px; right:-30px; width:84px; height:84px; color:var(--accent); opacity:.42;
     transform:rotate(-13deg); pointer-events:none; z-index:2; }
   .authTabs{ display:flex; background:#ece5d3; border-radius:999px; padding:3px; margin-bottom:6px; position:relative; z-index:1; }
   .authTabs div{ flex:1; text-align:center; padding:10px; border-radius:999px; font-weight:800; font-size:15px; cursor:pointer; color:#6d6a5e; }
@@ -427,6 +427,25 @@
   #folderList.gridView .folder{ height:122px; margin:0; }
   #folderList.gridView .folder .front{ top:40px; }
   #folderList.gridView .folder .fimgs img{ width:50px; height:66px; }
+  /* ---------- v21: custom dropdown buttons ---------- */
+  .ddBtn{ font-family:'Inter'; cursor:pointer; }
+  .ddBtn:active{ transform:scale(.965); }
+  #collPill{ border:none; }
+  #revCollSel{ background:#26241f; color:#f2ecdc; border:1.5px solid #45423a; border-radius:10px; padding:7px 12px; font-weight:700; font-size:13.5px; }
+  #mgMoveSel{ background:#fff; color:var(--ink); border:1.5px solid var(--line); border-radius:999px; padding:8px 14px; font-weight:700; font-size:13.5px; }
+  button.fld.ddBtn{ text-align:left; }
+  /* ---------- v22: polish pack (review fit, manage bar layout, scroll clearance) ---------- */
+  #revStampWrap{ width:min(88%,336px); }
+  .revCard img{ height:74px; }
+  #reviewScreen{ overflow-y:auto; }
+  .revCollRow{ color:#cfc9b8; }
+  #manageBar.on{ display:grid; grid-template-columns:auto 1fr auto; grid-template-areas:"count count done" "move sel del"; column-gap:8px; row-gap:8px; }
+  #manageCnt{ grid-area:count; align-self:center; }
+  #mgDoneBtn{ grid-area:done; }
+  #mgMoveBtn{ grid-area:move; }
+  #mgMoveSel{ grid-area:sel; justify-self:stretch; }
+  #mgDelBtn{ grid-area:del; }
+  #settingsScreen .scroll, #collScreen .scroll, #bookScreen .scroll, #letterScreen .scroll, #calScreen .scroll, #gridScreen .scroll{ padding-bottom:112px; }
 </style>
 </head>
 <body>
@@ -437,7 +456,7 @@
       <div id="camBg"><div class="camEmpty">your moment here</div></div>
       <div class="camTop">
         <div class="avatar" id="avatarBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.2-3.2 3.8-4.6 7-4.6s5.8 1.4 7 4.6"/></svg></div>
-        <select class="darkPill" id="collPill" style="flex:0 1 auto"></select>
+        <button type="button" class="darkPill ddBtn" id="collPill" style="flex:0 1 auto">My Collection ▾</button>
         <div style="flex:1"></div>
         <div class="roundDark" id="sampleBtn" title="Sample">✦</div>
         <div class="roundDark" id="camBtn" title="Camera">📷</div>
@@ -472,7 +491,7 @@
         <div class="revCard" data-f="template"><img id="cardTplImg" alt=""><div class="lab">Template</div><div class="chk">✓</div></div>
       </div>
       <div class="revMeta" id="revDate">New stamp</div>
-      <div class="revCollRow">Collection: <select id="revCollSel"></select></div>
+      <div class="revCollRow">Collection: <button type="button" class="ddBtn" id="revCollSel">My Collection ▾</button></div>
       <div class="revBtns"><button id="retakeBtn">Retake</button><button id="saveBtn">Save</button></div>
     </section>
 
@@ -490,7 +509,7 @@
     <section class="screen" id="gridScreen">
       <div class="subHead"><button class="backBtn" id="gridBack">‹</button><div class="t" id="gridTitle">All Stamps</div><button class="managePill" id="manageBtn">Manage</button></div>
       <div id="manageBar"><span class="cnt" id="manageCnt">0 selected</span>
-        <button id="mgMoveBtn">Move to</button><select id="mgMoveSel"></select>
+        <button id="mgMoveBtn">Move to</button><button type="button" class="ddBtn" id="mgMoveSel">My Collection ▾</button>
         <button id="mgDelBtn" class="danger">Delete</button>
         <button id="mgDoneBtn">Done</button></div>
       <div class="scroll"><div id="stampGrid"></div><div class="emptyNote" id="gridEmpty" style="display:none"><span class="big">nothing here yet</span>No stamps in this collection yet.</div></div>
@@ -555,14 +574,7 @@
           <div class="sub">Answer this to reset your password if email is not available. Pick something only you know.</div>
           <div class="setStat" id="sqStat" style="display:none"></div>
           <div class="fLab">Question</div>
-          <select class="fld" id="sqSel">
-            <option>What was the name of your first school?</option>
-            <option>What is your mother's first name?</option>
-            <option>In which city were you born?</option>
-            <option>What was the name of your first pet?</option>
-            <option>What is your favourite movie?</option>
-            <option>What was your childhood nickname?</option>
-          </select>
+          <button type="button" class="fld ddBtn" id="sqSel">What was the name of your first school? ▾</button>
           <div class="fLab">Your answer</div>
           <input class="fld" id="sqAnswer" type="text" placeholder="Your answer">
           <div class="fLab">Current password</div>
@@ -591,7 +603,7 @@
     <!-- day sheet -->
     <div id="sheetWrap"><div id="sheet">
       <div class="grab"></div>
-      <div class="sHead"><span style="font-size:19px">📷</span><span class="t" id="sheetTitle">Saturday, Oct 31</span><span style="font-size:19px">⚙</span></div>
+      <div class="sHead"><span style="font-size:19px">📷</span><span class="t" id="sheetTitle">Saturday, Oct 31</span><span id="sheetClose" style="font-size:17px;cursor:pointer;color:#8a8578;padding:2px 6px">✕</span></div>
       <div id="sheetStamps"></div>
       <div class="emptyNote" id="sheetEmpty" style="display:none;padding:20px">No stamps were made on this day.</div>
     </div></div>
@@ -762,14 +774,7 @@
         <div class="otpHead" style="font-size:25px">Secure your account</div>
         <p class="otpSub">Two quick safety nets — so you never lose your account or your stamps. Takes less than a minute.</p>
         <div class="fLab">Security question</div>
-        <select class="fld" id="suSqSel">
-          <option>What was the name of your first school?</option>
-          <option>What is your mother's first name?</option>
-          <option>In which city were you born?</option>
-          <option>What was the name of your first pet?</option>
-          <option>What is your favourite movie?</option>
-          <option>What was your childhood nickname?</option>
-        </select>
+        <button type="button" class="fld ddBtn" id="suSqSel">What was the name of your first school? ▾</button>
         <input class="fld" id="suSqAns" type="text" placeholder="Your answer" style="margin-top:10px">
         <button class="authBtn" id="suSqSave" style="background:#ece5d3;color:var(--ink)">Save question</button>
         <div class="authMsg" id="suSqStat"></div>
@@ -881,7 +886,7 @@ $('#rqFetchBtn').onclick=async(e)=>{
 };
 $('#suSqSave').onclick=async(e)=>{
   setBusy(e.target, true, 'Saving…');
-  const r=await api('setSecurityQuestion', { token: session.token, question: $('#suSqSel').value, answer: $('#suSqAns').value, currentPassword: $('#suPass').value });
+  const r=await api('setSecurityQuestion', { token: session.token, question: DD.suSqSel||SQ_QS[0], answer: $('#suSqAns').value, currentPassword: $('#suPass').value });
   setBusy(e.target, false);
   if(r.ok){ $('#suSqStat').textContent='✓ Security question saved'; $('#suErr').textContent=''; }
   else $('#suErr').textContent=r.error;
@@ -1190,7 +1195,7 @@ document.querySelectorAll('.revCard').forEach(cd=>{
 $('#retakeBtn').onclick=()=>showScreen('camScreen');
 $('#saveBtn').onclick=()=>{
   if(!pendingStamp) return;
-  const coll=$('#revCollSel').value||activeColl; activeColl=coll;
+  const coll=DD.revCollSel||activeColl; activeColl=coll; fillCollSelects();
   const rec={ id:Date.now(), img: frameStyle==='none'?pendingStamp.urlNone:pendingStamp.urlTpl,
     label:pendingStamp.label, coll, dk:pendingStamp.dk, cloud:false };
   stamps.unshift(rec);
@@ -1201,11 +1206,30 @@ $('#saveBtn').onclick=()=>{
 
 /* ---------- collections ---------- */
 const PALETTE=['#e6ccc4','#e7d3ab','#dfe4cf','#d3dee8','#eee3c0','#e3d5e8'];
-function fillCollSelects(){
-  const opts=colls.map(c=>`<option ${c===activeColl?'selected':''}>${c}</option>`).join('');
-  $('#collPill').innerHTML=opts; $('#revCollSel').innerHTML=opts;
+/* ---------- custom dropdowns (native select ka neela box khatam — sab app ke design me) ---------- */
+const SQ_QS=['What was the name of your first school?',"What is your mother's first name?",'In which city were you born?','What was the name of your first pet?','What is your favourite movie?','What was your childhood nickname?'];
+const DD={};
+function setDDLabel(id, v){ const b=document.getElementById(id); if(b&&v) b.textContent=v+' ▾'; }
+async function openDD(id, title, options, cur){
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const p=openModal(title, options.map(o=>`<button class="mOpt" data-v="${esc(o)}">${o===cur?'✓ ':''}${esc(o)}</button>`).join(''), 'Cancel');
+  $('#modalOk').style.display='none';
+  document.querySelectorAll('[data-v]').forEach(b=>{ b.onclick=()=>closeModal(b.dataset.v); });
+  const r=await p;
+  if(typeof r==='string' && options.includes(r)){ DD[id]=r; setDDLabel(id, r); return r; }
+  return null;
 }
-$('#collPill').onchange=e=>{ activeColl=e.target.value; fillCollSelects(); toast('New stamps will go to "'+activeColl+'"'); };
+function fillCollSelects(){
+  setDDLabel('collPill', activeColl);
+  setDDLabel('revCollSel', DD.revCollSel||activeColl);
+  setDDLabel('mgMoveSel', DD.mgMoveSel||activeColl);
+}
+$('#collPill').onclick=async()=>{ const v=await openDD('collPill','Save new stamps to', colls, activeColl);
+  if(v){ activeColl=v; fillCollSelects(); toast('New stamps will go to "'+v+'"'); } };
+$('#revCollSel').onclick=()=>openDD('revCollSel','Save this stamp to', colls, DD.revCollSel||activeColl);
+$('#mgMoveSel').onclick=()=>openDD('mgMoveSel','Move selected stamps to', colls, DD.mgMoveSel||activeColl);
+$('#sqSel').onclick=()=>openDD('sqSel','Choose a question', SQ_QS, DD.sqSel||SQ_QS[0]);
+$('#suSqSel').onclick=()=>openDD('suSqSel','Choose a question', SQ_QS, DD.suSqSel||SQ_QS[0]);
 function collCount(name){ return name==='__all' ? stamps.length : stamps.filter(s=>s.coll===name).length; }
 let collView=localStorage.getItem('snapmark_collview')||'list';
 function applyCollView(){
@@ -1280,9 +1304,9 @@ function renderCalendar(){
     c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
     return c;
   };
-  const pm = m===0?11:m-1, py = m===0?y-1:y;
-  mkMonth(py, pm, null);
-  mkMonth(y, m, now.toLocaleDateString('en-IN',{month:'long'}));
+  mkMonth(y, m, null);
+  const nm = m===11?0:m+1, ny = m===11?y+1:y;
+  mkMonth(ny, nm, new Date(ny,nm,1).toLocaleDateString('en-IN',{month:'long'}));
 }
 function openSheet(date, list){
   $('#sheetTitle').textContent=date.toLocaleDateString('en-IN',{weekday:'long', month:'short', day:'numeric'});
@@ -1295,6 +1319,7 @@ function openSheet(date, list){
 function closeSheet(){ const w=$('#sheetWrap'); if(!w.classList.contains('on')) return;
   w.classList.add('closing'); setTimeout(()=>w.classList.remove('on','closing'), 290); }
 $('#sheetWrap').onclick=e=>{ if(e.target.id==='sheetWrap') closeSheet(); };
+$('#sheetClose').onclick=closeSheet;
 
 /* ---------- scrapbook / projects ---------- */
 const PATTERNS=[
@@ -1323,6 +1348,7 @@ $('#bookMenuBtn').onclick=async()=>{
     `<button class="mOpt" data-act="new">＋ &nbsp;New project</button>
      <button class="mOpt" data-act="sort">↕ &nbsp;Sort projects A–Z</button>
      <button class="mOpt danger" data-act="del">🗑 &nbsp;Delete a project</button>`, 'Close');
+  $('#modalOk').style.display='none';
   document.querySelectorAll('[data-act]').forEach(b=>{ b.onclick=()=>closeModal(b.dataset.act); });
   const act=await p;
   if(act==='new') newProjectFlow();
@@ -1330,6 +1356,7 @@ $('#bookMenuBtn').onclick=async()=>{
   else if(act==='del'){
     if(!projects.length){ toast('No projects to delete'); return; }
     const p2=openModal('Delete which project?', projects.map(p=>`<button class="mOpt danger" data-del="${p.id}">🗑 &nbsp;${p.name}</button>`).join(''), 'Cancel');
+    $('#modalOk').style.display='none';
     document.querySelectorAll('[data-del]').forEach(b=>{ b.onclick=()=>closeModal(b.dataset.del); });
     const delId=await p2;
     if(delId && projects.some(p=>String(p.id)===String(delId))){ projects=projects.filter(p=>String(p.id)!==String(delId)); saveAll(); renderProjects(); toast('Project deleted'); }
@@ -1419,6 +1446,7 @@ $('#tabSent').onclick=()=>{ letterTab='sent'; renderLetters(); };
 let modalResolve=null;
 function openModal(title, bodyHTML, okText){
   clearTimeout(modalOutTimer);
+  $('#modalOk').style.display='';
   $('#modalWrap').classList.remove('closing');
   const _card=document.querySelector('.modalCard'); if(_card) _card.classList.remove('closing');
   $('#modalTitle').textContent=title;
@@ -1453,7 +1481,7 @@ function setManage(on){
   $('#manageBtn').textContent= on ? 'Managing…' : 'Manage';
   document.querySelectorAll('#stampGrid img').forEach(im=>im.classList.remove('picked'));
   updManageCnt();
-  if(on){ const sel=$('#mgMoveSel'); sel.innerHTML=colls.map(c=>`<option>${c}</option>`).join(''); }
+  if(on){ setDDLabel('mgMoveSel', DD.mgMoveSel||activeColl); }
 }
 function updManageCnt(){ $('#manageCnt').textContent=picked.size+' selected'; }
 $('#manageBtn').onclick=()=>setManage(!manageMode);
@@ -1467,7 +1495,7 @@ $('#mgDelBtn').onclick=()=>{
 };
 $('#mgMoveBtn').onclick=()=>{
   if(!picked.size){ toast('Select some stamps first'); return; }
-  const to=$('#mgMoveSel').value;
+  const to=DD.mgMoveSel||activeColl;
   stamps.forEach(s=>{ if(picked.has(s.id)){ s.coll=to; syncStamp(s); } });
   saveAll(); setManage(false); openGrid(gridColl); toast('Moved to "'+to+'"');
 };
@@ -1482,7 +1510,7 @@ async function loadSettings(){
     $('#bkStat').textContent= r.total ? (r.remaining+' of '+r.total+' backup codes unused') : 'No backup codes yet';
     $('#bkStat').classList.toggle('low', r.total>0 && r.remaining<=2);
     if(r.hasQuestion){ $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Set: '+r.question;
-      const sel=$('#sqSel'); [...sel.options].forEach(o=>{ if(o.text===r.question) sel.value=o.value||o.text; }); sel.value=r.question; }
+      DD.sqSel=r.question; setDDLabel('sqSel', r.question); }
     else { $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Not set yet'; }
   }
 }
@@ -1503,7 +1531,7 @@ $('#bkGenBtn').onclick=async(e)=>{
 };
 $('#sqSaveBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Saving…');
-  const r=await api('setSecurityQuestion', { token: session.token, question:$('#sqSel').value, answer:$('#sqAnswer').value, currentPassword:$('#sqPass').value });
+  const r=await api('setSecurityQuestion', { token: session.token, question:DD.sqSel||SQ_QS[0], answer:$('#sqAnswer').value, currentPassword:$('#sqPass').value });
   setBusy(e.target, false);
   if(r.ok){ $('#sqErr').textContent=''; $('#sqPass').value=''; loadSettings(); toast('Security question saved ✓'); }
   else $('#sqErr').textContent=r.error;
