@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Snapmark — Snap & Collect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Caveat:wght@600;700&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root{ --ink:#23211c; --paper:#fbf9f4; --grey:#8b8779; --accent:#d9481f; --line:#e9e4d8; }
+  html,body{ height:100%; }
+  body{ font-family:'Inter',sans-serif; background:#14120e; color:var(--ink); overflow:hidden; }
+  .serif{ font-family:'Playfair Display',serif; }
+  #phone{ position:relative; width:100%; height:100dvh; max-width:430px; margin:0 auto; background:var(--paper); overflow:hidden;
+    box-shadow:0 0 60px rgba(0,0,0,.5); display:flex; flex-direction:column; }
+  main{ flex:1; position:relative; overflow:hidden; }
+  .screen{ position:absolute; inset:0; display:none; flex-direction:column; background:var(--paper); }
+  .screen.on{ display:flex; animation:scrIn .25s ease; }
+  @keyframes scrIn{ from{ opacity:0; transform:translateX(18px);} to{ opacity:1; transform:none;} }
+  .scroll{ overflow-y:auto; flex:1; }
+
+  /* ============ CAMERA (full bleed) ============ */
+  #camScreen{ background:#20241f; }
+  #camBg{ position:absolute; inset:0; }
+  #camBg video,#camBg img{ width:100%; height:100%; object-fit:cover; display:block; }
+  #camBg .camEmpty{ position:absolute; inset:0; background:linear-gradient(165deg,#5b6650,#2c332a 60%,#1d211c);
+    display:flex; align-items:center; justify-content:center; color:#e8e2cf; font-family:'Caveat',cursive; font-size:30px; }
+  .camTop{ position:absolute; top:0; left:0; right:0; padding:14px 16px; display:flex; align-items:center; gap:10px; z-index:6; }
+  .avatar{ width:38px; height:38px; border-radius:50%; background:rgba(20,18,12,.55); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:900; backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,.35); cursor:pointer; }
+  .darkPill{ background:rgba(20,18,12,.55); color:#fff; border:1.5px solid rgba(255,255,255,.25); backdrop-filter:blur(6px);
+    border-radius:999px; padding:8px 16px; font-weight:800; font-size:13.5px; cursor:pointer; }
+  select.darkPill{ appearance:none; -webkit-appearance:none; font-family:'Inter'; }
+  .roundDark{ width:38px; height:38px; border-radius:50%; background:rgba(20,18,12,.55); border:1.5px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(6px); color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .camHint{ position:absolute; top:66px; left:50%; transform:translateX(-50%); z-index:6; background:rgba(20,18,12,.5); color:#f0ead6;
+    padding:6px 16px; border-radius:999px; font-size:12.5px; font-weight:700; backdrop-filter:blur(6px); white-space:nowrap; }
+  #cutterWrap{ position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); z-index:5; width:min(76vw,300px); }
+  #metal{ position:relative; border-radius:42px; padding:19px;
+    background:linear-gradient(155deg,#ececf0,#b9b9c1 34%,#f4f4f7 54%,#a6a6b0 80%,#d5d5dc);
+    box-shadow:0 28px 55px rgba(0,0,0,.5), inset 0 2px 4px #fff, inset 0 -5px 10px rgba(0,0,0,.32); transition:transform .12s ease; }
+  #metal.press{ transform:translateY(10px) scale(.99); }
+  #filmFrame{ position:relative; border-radius:10px; background:#0b0b0c; padding:13px 21px; box-shadow:inset 0 0 0 2px #2e2e30, inset 0 6px 14px rgba(0,0,0,.85); overflow:hidden; }
+  #filmFrame::before,#filmFrame::after{ content:""; position:absolute; top:9px; bottom:9px; width:10px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 19'%3E%3Crect x='1.4' y='4.5' width='7.2' height='10' rx='1.6' fill='%234c4c51'/%3E%3C/svg%3E");
+    background-size:10px 19px; background-repeat:repeat-y; }
+  #filmFrame::before{ left:5px; } #filmFrame::after{ right:5px; }
+  #filmView{ position:relative; width:100%; aspect-ratio:1/1.06; border-radius:3px; overflow:hidden; background:#fdfcf6;
+    box-shadow:inset 0 0 0 1px #d8d2c0; }
+  #filmView.sq{ aspect-ratio:1/1; } #filmView.wide{ aspect-ratio:1.28/1; }
+  #mediaBox{ position:absolute; inset:13px; overflow:hidden; border-radius:2px; background:#e9e2cf; }
+  #mediaBox video,#mediaBox img{ width:100%; height:100%; object-fit:cover; display:block; }
+  #mediaBox .fvEmpty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#8a7f63;
+    font-family:'Caveat',cursive; font-size:24px; text-align:center; padding:10px; }
+  .perf{ position:absolute; inset:0; pointer-events:none; z-index:3;
+    background-image:
+      radial-gradient(circle 5.2px, #0c0c0d 4.8px, transparent 5.8px),
+      radial-gradient(circle 5.2px, #0c0c0d 4.8px, transparent 5.8px),
+      radial-gradient(circle 5.2px, #0c0c0d 4.8px, transparent 5.8px),
+      radial-gradient(circle 5.2px, #0c0c0d 4.8px, transparent 5.8px);
+    background-size:19px 12px, 19px 12px, 12px 19px, 12px 19px;
+    background-position:0 0, 0 100%, 0 0, 100% 0;
+    background-repeat:repeat-x, repeat-x, repeat-y, repeat-y; }
+  #filmLogo{ text-align:center; color:#8f8f96; font-size:10px; letter-spacing:3px; font-weight:800; margin-top:8px; }
+  #ejectImg{ position:absolute; left:50%; top:2px; width:80%; z-index:7; display:none; filter:drop-shadow(0 16px 22px rgba(0,0,0,.5)); }
+  #ejectImg.go{ display:block; animation:eject .85s cubic-bezier(.3,.7,.3,1) forwards; }
+  @keyframes eject{ 0%{ transform:translate(-50%,30%) rotate(0); opacity:.3; } 30%{ opacity:1; } 100%{ transform:translate(-60%,-92%) rotate(-8deg); opacity:1; } }
+  #flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:8; }
+  .camBottom{ position:absolute; left:0; right:0; bottom:96px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .segPill{ display:flex; background:rgba(20,18,12,.55); backdrop-filter:blur(6px); border-radius:999px; padding:3px; border:1.5px solid rgba(255,255,255,.2); }
+  .segPill div{ padding:6px 20px; border-radius:999px; color:#cfc9b8; font-weight:900; font-size:12.5px; letter-spacing:.6px; cursor:pointer; }
+  .segPill div.sel{ background:#fff; color:#191713; }
+  .shutterRow{ display:flex; align-items:center; justify-content:space-between; width:100%; padding:0 26px; }
+  .galBtn{ width:46px; height:46px; border-radius:14px; background:rgba(20,18,12,.5); border:1.5px solid rgba(255,255,255,.25);
+    display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; backdrop-filter:blur(6px); }
+  #shutter{ width:74px; height:74px; border-radius:50%; background:rgba(25,23,18,.85); border:3px solid rgba(255,255,255,.9); cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.45), inset 0 0 0 5px rgba(255,255,255,.14); transition:transform .08s; }
+  #shutter:active{ transform:scale(.92); }
+  .zoomPill{ background:rgba(20,18,12,.55); color:#fff; border-radius:999px; padding:8px 13px; font-weight:800; font-size:13px; cursor:pointer; border:1.5px solid rgba(255,255,255,.25); }
+
+  /* ============ REVIEW ============ */
+  #reviewScreen{ background:#0d0d0c; color:#f2eee2; padding:18px 18px 16px; }
+  .revTop{ display:flex; align-items:center; justify-content:space-between; }
+  .revTop .t{ flex:1; text-align:center; font-weight:800; font-size:16px; }
+  .qBtn{ width:32px; height:32px; border-radius:50%; background:#262622; color:#d8d2c0; display:flex; align-items:center; justify-content:center; font-weight:900; }
+  #revStampWrap{ margin:16px auto 6px; width:min(97%,368px); }
+  #revStampWrap.pop{ animation:stampDrop .55s cubic-bezier(.25,1.6,.4,1); }
+  @keyframes stampDrop{ 0%{ transform:translateY(-40px) scale(1.45) rotate(-8deg); opacity:0; } 55%{ opacity:1; } 100%{ transform:none; } }
+  #revStamp{ width:100%; display:block; }
+  .revCards{ display:flex; gap:12px; margin-top:14px; }
+  .revCard{ flex:1; background:#1d1d1a; border:2px solid #33322c; border-radius:16px; padding:10px; cursor:pointer; position:relative; }
+  .revCard.sel{ border-color:#57544a; }
+  .revCard img{ width:100%; height:86px; object-fit:contain; display:block; }
+  .revCard .lab{ text-align:center; font-size:13px; font-weight:700; color:#d8d2c0; margin-top:7px; }
+  .revCard .chk{ position:absolute; top:-9px; right:-7px; width:24px; height:24px; border-radius:50%; background:#e8641f; color:#fff;
+    display:none; align-items:center; justify-content:center; font-size:13px; font-weight:900; box-shadow:0 3px 8px rgba(0,0,0,.45); }
+  .revCard.sel .chk{ display:flex; }
+  .revMeta{ margin-top:14px; font-size:14px; color:#e8e3d2; font-weight:600; }
+  .revCollRow{ margin-top:8px; display:flex; gap:8px; align-items:center; font-size:13px; color:#a49d88; font-weight:700; }
+  .revCollRow select{ background:#262622; color:#e8e3d2; border:1.5px solid #3a392f; border-radius:10px; padding:6px 10px; font-family:'Inter'; font-weight:700; }
+  .revBtns{ display:flex; gap:12px; margin-top:auto; padding-top:16px; }
+  .revBtns button{ flex:1; padding:15px; border-radius:999px; font-family:'Inter'; font-weight:800; font-size:15.5px; cursor:pointer; border:none; }
+  #retakeBtn{ background:#262622; color:#e8e3d2; }
+  #saveBtn{ background:#fff; color:#141310; }
+
+  /* ============ generic page ============ */
+  .page{ padding:20px 20px 110px; }
+  .pageTitle{ font-family:'Playfair Display',serif; font-size:31px; font-weight:600; }
+  .iconBtns{ display:flex; gap:9px; }
+  .iconBtn{ width:38px; height:38px; border-radius:12px; border:1.5px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
+  .headRow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+
+  /* collections folders */
+  .folder{ position:relative; margin-top:20px; border-radius:16px; padding:18px 18px 16px; cursor:pointer; min-height:96px;
+    box-shadow:0 4px 14px rgba(35,33,28,.07); transition:transform .15s; overflow:hidden; }
+  .folder:hover{ transform:translateY(-2px); }
+  .folder::before{ content:""; position:absolute; top:-13px; left:0; width:112px; height:16px; border-radius:9px 13px 0 0; background:inherit; filter:brightness(.96); }
+  .folder h3{ font-size:17.5px; font-weight:800; position:relative; }
+  .folder p{ font-size:13px; color:#6d6a5e; font-weight:600; position:relative; }
+  .folder .fimgs{ position:absolute; right:8px; top:0; bottom:0; display:flex; align-items:center; gap:5px; opacity:.75; }
+  .folder .fimgs img{ width:58px; height:72px; object-fit:cover; border-radius:3px; transform:rotate(3deg); filter:blur(.6px) saturate(1.05); }
+  #fab{ position:absolute; right:20px; bottom:104px; width:58px; height:58px; border-radius:50%; background:#17150f; color:#fff;
+    font-size:30px; border:none; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.3); z-index:8; }
+
+  /* stamps grid page */
+  .subHead{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px 8px; }
+  .backBtn{ width:36px; height:36px; border-radius:50%; background:#fff; border:1.5px solid var(--line); font-size:17px; cursor:pointer; }
+  .subHead .t{ font-family:'Playfair Display',serif; font-size:19px; font-weight:600; }
+  .managePill{ background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:7px 15px; font-weight:800; font-size:13px; cursor:pointer; }
+  #stampGrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:12px 18px 110px; }
+  #stampGrid img{ width:100%; display:block; cursor:pointer; filter:drop-shadow(0 4px 9px rgba(35,33,28,.18)); animation:popIn .3s backwards; }
+  @keyframes popIn{ from{ transform:scale(.7); opacity:0; } }
+  .emptyNote{ text-align:center; color:var(--grey); font-weight:700; font-size:14px; padding:44px 30px; }
+  .emptyNote .big{ font-family:'Playfair Display',serif; font-style:italic; font-size:23px; color:var(--ink); display:block; margin-bottom:6px; }
+
+  /* calendar */
+  .calHead{ padding:22px 20px 4px; display:flex; align-items:flex-start; justify-content:space-between; }
+  .calBig{ display:flex; align-items:baseline; gap:10px; }
+  .calBig .d{ font-family:'Playfair Display',serif; font-size:56px; font-weight:600; line-height:1; }
+  .calBig .m{ font-family:'Playfair Display',serif; font-style:italic; font-size:31px; }
+  .calBig .y{ font-size:14px; color:var(--grey); font-weight:700; margin-left:-4px; }
+  .calWrap{ padding:8px 16px 110px; }
+  .dow{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11.5px; font-weight:800; color:var(--grey); padding:8px 0 6px; }
+  .calGrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cell{ position:relative; aspect-ratio:.92; background:#f4f0e6; border-radius:12px; padding:5px 6px; font-size:12.5px; font-weight:700; overflow:hidden; cursor:pointer; }
+  .cell.dim{ opacity:.38; }
+  .cell.today{ box-shadow:inset 0 0 0 2px var(--ink); }
+  .cell img{ position:absolute; inset:16px 5px 4px; width:calc(100% - 10px); height:calc(100% - 20px); object-fit:cover; border-radius:4px; }
+  .monthLab{ font-family:'Playfair Display',serif; font-style:italic; font-size:21px; margin:18px 2px 4px; }
+  .monthLab span{ font-style:normal; font-size:13px; color:var(--grey); font-family:'Inter'; font-weight:700; }
+
+  /* bottom sheet */
+  #sheetWrap{ position:absolute; inset:0; background:rgba(24,22,16,.45); display:none; z-index:25; }
+  #sheetWrap.on{ display:block; }
+  #sheet{ position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:24px 24px 0 0; padding:12px 20px 30px; animation:sheetUp .3s cubic-bezier(.3,1.1,.4,1); max-height:70%; overflow-y:auto; }
+  @keyframes sheetUp{ from{ transform:translateY(60%); } }
+  #sheet .grab{ width:42px; height:5px; border-radius:99px; background:#ddd6c6; margin:0 auto 12px; }
+  #sheet .sHead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  #sheet .sHead .t{ font-weight:800; font-size:15.5px; }
+  #sheetStamps{ display:flex; gap:12px; flex-wrap:wrap; }
+  #sheetStamps img{ width:29%; filter:drop-shadow(0 5px 10px rgba(0,0,0,.2)); cursor:pointer; }
+
+  /* scrapbook */
+  .book{ margin:6px auto 4px; width:100%; max-width:360px; aspect-ratio:1.55; background:linear-gradient(90deg,#efe9db 0 49.4%,#d9d2bf 49.7% 50.3%,#f4efe3 50.6%);
+    border:5px solid #7d5a38; border-radius:12px; position:relative; box-shadow:0 12px 26px rgba(35,33,28,.2), inset 0 0 0 2px #e5dcc6; }
+  .book::before{ content:""; position:absolute; left:50%; top:6px; bottom:6px; width:14px; transform:translateX(-50%);
+    background-image:radial-gradient(circle, #26241f 3.4px, transparent 4.1px); background-size:14px 21px; background-repeat:repeat-y; }
+  .book .bp{ position:absolute; left:7%; top:12%; font-family:'Caveat',cursive; font-size:21px; color:#4c463a; max-width:36%; line-height:1.15; }
+  .projGrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
+  .proj{ border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 5px 14px rgba(35,33,28,.1); cursor:pointer; }
+  .proj .cov{ height:118px; position:relative; }
+  .proj .cov .pt{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Caveat',cursive; font-size:21px; color:rgba(35,33,28,.75); text-align:center; padding:10px; }
+  .proj .meta{ padding:10px 12px; }
+  .proj .meta b{ font-size:14.5px; } .proj .meta p{ font-size:12px; color:var(--grey); font-weight:700; }
+  .secLab{ font-size:12px; font-weight:900; letter-spacing:1.6px; color:var(--grey); margin-top:20px; }
+
+  /* letters */
+  .segTabs{ display:flex; background:#efeadf; border-radius:999px; padding:3px; margin-bottom:8px; }
+  .segTabs div{ flex:1; text-align:center; padding:8px; border-radius:999px; font-weight:800; font-size:14px; cursor:pointer; color:#6d6a5e; }
+  .segTabs div.sel{ background:#fff; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .letterCard{ background:#fff; border:1.5px solid var(--line); border-radius:16px; padding:14px; margin-top:12px; display:flex; gap:12px; align-items:center; cursor:pointer; }
+  .letterCard img{ width:56px; height:70px; object-fit:contain; }
+  .letterCard .lm{ font-family:'Caveat',cursive; font-size:19px; line-height:1.15; }
+  .letterCard .lt{ font-size:12px; color:var(--grey); font-weight:700; }
+
+  /* floating nav (frosted pill, like reference) */
+  #tabbar{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20;
+    display:flex; gap:2px; padding:7px 10px; border-radius:999px; background:rgba(255,255,255,.88); backdrop-filter:blur(14px);
+    box-shadow:0 12px 32px rgba(20,18,12,.25), inset 0 0 0 1px rgba(35,33,28,.06); transition:background .25s; }
+  #tabbar.dark{ background:rgba(24,22,17,.72); }
+  #tabbar button{ background:none; border:none; cursor:pointer; padding:8px 13px; border-radius:999px; transition:.15s; }
+  #tabbar button svg{ width:26px; height:26px; display:block; }
+  #tabbar button.sel{ background:rgba(35,33,28,.09); }
+  #tabbar.dark button.sel{ background:rgba(255,255,255,.92); }
+  #tabbar.dark button svg *{ stroke:#e9e4d4; }
+  #tabbar.dark button.sel svg *{ stroke:#23211c; }
+
+  /* viewer */
+  #viewer{ position:absolute; inset:0; background:rgba(16,14,10,.94); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:30; padding:24px; }
+  #viewer.on{ display:flex; }
+  #viewer img{ width:min(80vw,320px); filter:drop-shadow(0 24px 30px rgba(0,0,0,.6)); }
+  #viewer .vbtns{ display:flex; gap:10px; margin-top:26px; flex-wrap:wrap; justify-content:center; }
+  #viewer button{ padding:11px 20px; border-radius:999px; border:none; font-weight:800; font-family:'Inter'; cursor:pointer; background:#fff; }
+  #viewer #delBtn{ background:#b3372a; color:#fff; }
+  #toast{ position:absolute; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff;
+    padding:10px 20px; border-radius:999px; font-weight:800; font-size:13.5px; opacity:0; pointer-events:none; transition:.25s; z-index:40; white-space:nowrap; }
+  #toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .bigBtn{ width:100%; padding:14px; border-radius:999px; border:none; background:#17150f; color:#fff; font-family:'Inter'; font-weight:900; font-size:15px; cursor:pointer; margin-top:14px; }
+  .txtIn{ width:100%; border:1.5px solid var(--line); border-radius:12px; padding:11px 14px; font-family:'Caveat',cursive; font-size:21px; background:#fff; margin-top:10px; }
+
+  /* ============ AUTH ============ */
+  #authScreen{ position:absolute; inset:0; z-index:60; background:var(--paper); display:flex; flex-direction:column; padding:36px 26px 24px; overflow-y:auto;
+    background-image:radial-gradient(#e7dfcd 1px, transparent 1px); background-size:22px 22px; }
+  .aMark{ width:52px; height:52px; margin:2px auto 10px; display:block; }
+  #authScreen .aLogo{ font-family:'Playfair Display',serif; font-size:40px; font-weight:700; text-align:center; line-height:1; }
+  #authScreen .aLogo span{ color:var(--accent); }
+  #authScreen .aTag{ text-align:center; color:#7a7263; font-weight:600; font-size:13.5px; margin:7px 0 22px; }
+  #authScreen.otpMode .aMark, #authScreen.otpMode .aLogo, #authScreen.otpMode .aTag{ display:none; }
+
+  /* the form lives inside a big postage stamp */
+  .stampCard{ position:relative; background:#fff; border-radius:8px; padding:22px 20px 16px;
+    box-shadow:0 18px 40px rgba(35,33,28,.13); }
+  .stampCard::after{ content:""; position:absolute; inset:0; pointer-events:none; border-radius:8px;
+    background-image:
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px);
+    background-size:19px 12px, 19px 12px, 12px 19px, 12px 19px;
+    background-position:0 0, 0 100%, 0 0, 100% 0;
+    background-repeat:repeat-x, repeat-x, repeat-y, repeat-y; }
+  .postmark{ position:absolute; top:-34px; right:-20px; width:104px; height:104px; color:var(--accent); opacity:.5;
+    transform:rotate(-13deg); pointer-events:none; z-index:2; }
+  .authTabs{ display:flex; background:#ece5d3; border-radius:999px; padding:3px; margin-bottom:6px; position:relative; z-index:1; }
+  .authTabs div{ flex:1; text-align:center; padding:10px; border-radius:999px; font-weight:800; font-size:15px; cursor:pointer; color:#6d6a5e; }
+  .authTabs div.sel{ background:#fff; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .fLab{ font-size:11px; font-weight:900; letter-spacing:1.2px; color:#8b8779; margin:14px 2px 6px; text-transform:uppercase; }
+  .fld{ width:100%; border:1.5px solid var(--line); border-radius:13px; padding:13px 15px; font-family:'Inter'; font-weight:600; font-size:15px; background:#fbf9f3; }
+  .fld:focus{ outline:2px solid var(--ink); background:#fff; }
+  .fWrap{ position:relative; }
+  .fWrap .fld{ padding-right:46px; }
+  .eyeBtn{ position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:17px; cursor:pointer; padding:7px; opacity:.65; }
+  .strength{ display:flex; gap:5px; margin-top:8px; }
+  .strength i{ flex:1; height:5px; border-radius:99px; background:#e9e2cf; transition:.2s; }
+  .strengthTxt{ font-size:11.5px; font-weight:700; color:#8b8779; margin-top:5px; }
+  .linkRow{ text-align:right; margin-top:9px; }
+  .linkRow a{ color:var(--ink); font-weight:700; font-size:13px; cursor:pointer; text-decoration:underline; }
+  .linkRow.left{ text-align:left; }
+  .authBtn{ width:100%; padding:15px; border-radius:999px; border:none; background:#17150f; color:#fff; font-family:'Inter'; font-weight:800; font-size:15.5px; cursor:pointer; margin-top:14px; }
+  .authBtn.ghost{ background:#fff; color:var(--ink); border:1.5px solid var(--ink); }
+  .authBtn[disabled]{ opacity:.55; }
+  .authErr{ color:#b3372a; font-weight:700; font-size:13.5px; text-align:center; min-height:19px; margin:10px 0 0; }
+  .authMsg{ color:#3d7a3d; font-weight:700; font-size:13.5px; text-align:center; min-height:19px; }
+  .authNote{ text-align:center; color:#a49d88; font-size:12px; font-weight:600; margin-top:auto; padding-top:20px; line-height:1.55; }
+
+  /* OTP page */
+  .otpTopBar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .otpHead{ font-family:'Playfair Display',serif; font-size:29px; font-weight:600; margin:4px 0 5px; }
+  .otpSub{ color:#7a7263; font-weight:600; font-size:14px; line-height:1.5; }
+  .otpSub b{ color:var(--ink); }
+  .otpStampPanel{ position:relative; background:#fff; border-radius:8px; padding:26px 22px 14px; margin:22px 0 6px;
+    box-shadow:0 16px 34px rgba(35,33,28,.15); }
+  .otpStampPanel::after{ content:""; position:absolute; inset:0; pointer-events:none; border-radius:8px;
+    background-image:
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px),
+      radial-gradient(circle 5.4px, var(--paper) 5px, transparent 6px);
+    background-size:19px 12px, 19px 12px, 12px 19px, 12px 19px;
+    background-position:0 0, 0 100%, 0 0, 100% 0;
+    background-repeat:repeat-x, repeat-x, repeat-y, repeat-y; }
+  .otpPanelCap{ text-align:center; font-size:10.5px; font-weight:900; letter-spacing:3px; color:#a49d88; margin-top:13px; }
+  .otpBoxes{ display:flex; gap:6px; justify-content:center; position:relative; z-index:1; }
+  .otpBox{ flex:none; width:40px; height:52px; text-align:center; font-size:21px; font-weight:800; font-family:'Inter';
+    border:1.5px solid #cfc7ae; border-radius:11px; background:#fff; color:var(--ink); box-shadow:0 2px 6px rgba(35,33,28,.06); }
+  .otpBox:focus{ outline:none; border-color:var(--ink); }
+  .otpBoxes.shake{ animation:shake .4s; }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+  .resendRow{ text-align:center; margin-top:16px; font-size:13.5px; font-weight:600; color:#7a7263; }
+  .resendRow a{ color:var(--ink); font-weight:800; cursor:pointer; text-decoration:underline; }
+  .resendRow a.off{ opacity:.4; pointer-events:none; text-decoration:none; }
+
+  #acctWrap{ position:absolute; inset:0; background:rgba(24,22,16,.45); display:none; z-index:55; }
+  #acctWrap.on{ display:block; }
+  #acctSheet{ position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:24px 24px 0 0; padding:14px 22px 30px; animation:sheetUp .3s cubic-bezier(.3,1.1,.4,1); }
+  #acctSheet .an{ font-family:'Playfair Display',serif; font-size:24px; font-weight:600; }
+  #acctSheet .ae{ color:#7a7263; font-weight:700; font-size:13.5px; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div id="phone">
+  <main>
+    <!-- CAMERA -->
+    <section class="screen on" id="camScreen">
+      <div id="camBg"><div class="camEmpty">your moment here</div></div>
+      <div class="camTop">
+        <div class="avatar" id="avatarBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.2-3.2 3.8-4.6 7-4.6s5.8 1.4 7 4.6"/></svg></div>
+        <select class="darkPill" id="collPill" style="flex:0 1 auto"></select>
+        <div style="flex:1"></div>
+        <div class="roundDark" id="sampleBtn" title="Sample">✦</div>
+        <div class="roundDark" id="camBtn" title="Camera">📷</div>
+      </div>
+      <div class="camHint">Swipe up or down to change cutter</div>
+      <div id="cutterWrap">
+        <div id="metal">
+          <div id="filmFrame">
+            <div id="filmView"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div><div class="perf"></div></div>
+            <div id="filmLogo">S N A P M A R K</div>
+          </div>
+        </div>
+        <img id="ejectImg" alt="">
+      </div>
+      <div id="flash"></div>
+      <div class="camBottom">
+        <div class="segPill"><div class="sel" id="modeStamp">STAMP</div><div id="modeFrame">FRAME</div></div>
+        <div class="shutterRow">
+          <div class="galBtn" id="galleryBtn">🖼️</div>
+          <button id="shutter"></button>
+          <div class="zoomPill" id="zoomTag">1x</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section class="screen" id="reviewScreen">
+      <div class="revTop"><div style="width:32px"></div><div class="t" id="revTitle">None</div><div class="qBtn">?</div></div>
+      <div id="revStampWrap"><img id="revStamp" alt="Your stamp"></div>
+      <div class="revCards">
+        <div class="revCard sel" data-f="none"><img id="cardNoneImg" alt=""><div class="lab">None</div><div class="chk">✓</div></div>
+        <div class="revCard" data-f="template"><img id="cardTplImg" alt=""><div class="lab">Template</div><div class="chk">✓</div></div>
+      </div>
+      <div class="revMeta" id="revDate">New stamp</div>
+      <div class="revCollRow">Collection: <select id="revCollSel"></select></div>
+      <div class="revBtns"><button id="retakeBtn">Retake</button><button id="saveBtn">Save</button></div>
+    </section>
+
+    <!-- COLLECTIONS -->
+    <section class="screen" id="collScreen">
+      <div class="scroll"><div class="page">
+        <div class="headRow"><div class="pageTitle">Collections</div>
+          <div class="iconBtns"><div class="iconBtn">▦</div><div class="iconBtn">☰</div></div></div>
+        <div id="folderList"></div>
+      </div></div>
+      <button id="fab">+</button>
+    </section>
+
+    <!-- STAMPS GRID -->
+    <section class="screen" id="gridScreen">
+      <div class="subHead"><button class="backBtn" id="gridBack">‹</button><div class="t" id="gridTitle">All Stamps</div><button class="managePill" id="manageBtn">Manage</button></div>
+      <div class="scroll"><div id="stampGrid"></div><div class="emptyNote" id="gridEmpty" style="display:none"><span class="big">nothing here yet</span>No stamps in this collection yet.</div></div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="screen" id="calScreen">
+      <div class="scroll">
+        <div class="calHead"><div class="calBig"><span class="d" id="calDay">01</span><span class="m" id="calMonth">November</span><span class="y" id="calYear">2026</span></div>
+          <div class="iconBtn">🗺️</div></div>
+        <div class="calWrap" id="calWrap"></div>
+      </div>
+    </section>
+
+    <!-- SCRAPBOOK -->
+    <section class="screen" id="bookScreen">
+      <div class="scroll"><div class="page">
+        <div class="headRow"><div class="pageTitle">My Scrapbook</div>
+          <div class="iconBtns"><div class="iconBtn">···</div><div class="iconBtn" id="newProjBtn">+</div></div></div>
+        <div class="book"><div class="bp">Today is a<br>good day ✦</div></div>
+        <div class="secLab">PROJECTS</div>
+        <div class="projGrid" id="projGrid"></div>
+      </div></div>
+    </section>
+
+    <!-- PROJECT PAGE -->
+    <section class="screen" id="projScreen">
+      <div class="subHead"><button class="backBtn" id="projBack">‹</button><div class="t" id="projTitle">Project</div><button class="managePill" id="projAddBtn">+ Stamps</button></div>
+      <div class="scroll"><div class="page" style="padding-top:8px">
+        <div id="projPage" style="position:relative;min-height:420px;background:#fffdf4;border:1.5px solid var(--line);border-radius:14px;box-shadow:0 8px 20px rgba(35,33,28,.08)"></div>
+        <div class="emptyNote" id="projEmpty"><span class="big">blank page</span>Use "+ Stamps" above to place stamps on this page.</div>
+      </div></div>
+    </section>
+
+    <!-- LETTERS -->
+    <section class="screen" id="letterScreen">
+      <div class="scroll"><div class="page">
+        <div class="pageTitle" style="margin-bottom:14px">Letters</div>
+        <div class="segTabs"><div class="sel" id="tabRecv">Received</div><div id="tabSent">Sent</div></div>
+        <div id="letterBody"></div>
+      </div></div>
+    </section>
+
+    <!-- day sheet -->
+    <div id="sheetWrap"><div id="sheet">
+      <div class="grab"></div>
+      <div class="sHead"><span style="font-size:19px">📷</span><span class="t" id="sheetTitle">Saturday, Oct 31</span><span style="font-size:19px">⚙</span></div>
+      <div id="sheetStamps"></div>
+      <div class="emptyNote" id="sheetEmpty" style="display:none;padding:20px">No stamps were made on this day.</div>
+    </div></div>
+
+    <div id="viewer">
+      <img id="viewerImg" alt="Stamp">
+      <div class="vbtns"><button id="dlBtn">⬇ Save image</button><button id="delBtn">Delete</button><button id="closeViewer">Close</button></div>
+    </div>
+    <div id="toast"></div>
+  </main>
+
+  <nav id="tabbar" class="dark">
+    <button data-go="camScreen" class="sel" title="Camera">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="24" r="6.5"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4.2 4.2M32.8 32.8L37 37M37 11l-4.2 4.2M15.2 32.8L11 37"/></svg>
+    </button>
+    <button data-go="collScreen" title="Collections">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><rect x="8" y="8" width="13" height="13" rx="3"/><rect x="27" y="8" width="13" height="13" rx="3"/><rect x="8" y="27" width="13" height="13" rx="3"/><rect x="27" y="27" width="13" height="13" rx="3"/></svg>
+    </button>
+    <button data-go="calScreen" title="Calendar">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><rect x="7" y="10" width="34" height="31" rx="4"/><path d="M7 19h34M15 6v8M33 6v8"/><path d="M14 27h4M22 27h4M30 27h4M14 34h4M22 34h4"/></svg>
+    </button>
+    <button data-go="bookScreen" title="Scrapbook">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M33 8l7 7L19 36l-8 3 3-8z"/><path d="M29 12l7 7"/></svg>
+    </button>
+    <button data-go="letterScreen" title="Letters">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="12" width="36" height="25" rx="3"/><path d="M7 14l17 13L41 14"/></svg>
+    </button>
+  </nav>
+  <!-- AUTH -->
+  <div id="authScreen">
+    <svg class="aMark" viewBox="0 0 48 48" fill="none" stroke="#26221c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="34" height="34" rx="5" stroke-dasharray="5.5 4.5"/><path d="M14 31l6.5-6.5 4.5 4.5 3.5-3.5L34 31z"/><circle cx="19" cy="17.5" r="2.2"/></svg>
+    <div class="aLogo">Snap<span>mark</span></div>
+    <div class="aTag">Your stamps, safe in your account.</div>
+
+    <div id="viewLogin">
+      <div class="stampCard">
+        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmA" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmA">SNAPMARK • POST • EST 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <div class="authTabs"><div id="tabLogin" class="sel">Log in</div><div id="tabSignup">Sign up</div></div>
+        <div class="fLab">Email</div>
+        <input class="fld" id="liEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <div class="fLab">Password</div>
+        <div class="fWrap"><input class="fld" id="liPass" type="password" placeholder="Your password" autocomplete="current-password"><button class="eyeBtn" data-eye="liPass" type="button">👁</button></div>
+        <div class="linkRow"><a id="forgotLink">Forgot password?</a></div>
+        <button class="authBtn" id="loginBtn">Log in</button>
+        <div class="authErr" id="loginErr"></div>
+      </div>
+    </div>
+
+    <div id="viewSignup" style="display:none">
+      <div class="stampCard">
+        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmB" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmB">SNAPMARK • POST • EST 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <div class="authTabs"><div id="tabLogin2">Log in</div><div id="tabSignup2" class="sel">Sign up</div></div>
+        <div class="fLab">Your name</div>
+        <input class="fld" id="suName" type="text" placeholder="Full name" autocomplete="name">
+        <div class="fLab">Email</div>
+        <input class="fld" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <div class="fLab">Password</div>
+        <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
+        <div class="strength" id="strengthBar"><i></i><i></i><i></i><i></i></div>
+        <div class="strengthTxt" id="strengthTxt">Use 6+ characters with numbers or symbols for a stronger password.</div>
+        <button class="authBtn" id="otpBtn">Continue →</button>
+        <div class="authErr" id="signupErr"></div>
+      </div>
+    </div>
+
+    <div id="viewResetEmail" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Forgot password</div>
+        <p class="otpSub">Enter your account email — we will send you a reset code.</p>
+        <div class="fLab">Your email</div>
+        <input class="fld" id="rsEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <button class="authBtn" id="rsSendBtn">Send reset code</button>
+        <div class="linkRow left"><a id="backLogin">← Back to login</a></div>
+        <div class="authErr" id="resetErr"></div>
+      </div>
+    </div>
+
+    <div id="viewNewPass" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Set a new password</div>
+        <p class="otpSub">Code verified ✓ — now choose your new password.</p>
+        <div class="fLab">New password</div>
+        <div class="fWrap"><input class="fld" id="rsPass" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button class="eyeBtn" data-eye="rsPass" type="button">👁</button></div>
+        <button class="authBtn" id="rsBtn">Save new password</button>
+        <div class="authErr" id="newPassErr"></div>
+      </div>
+    </div>
+
+    <div id="viewOtp" style="display:none">
+      <div class="otpTopBar"><button class="backBtn" id="otpBack">‹</button><span style="font-weight:800;font-size:14px;color:#7a7263">Verification</span></div>
+      <div class="otpHead">Check your email</div>
+      <p class="otpSub">We sent a 6-digit code to <b id="otpEmailTxt">your email</b>.<br>It is tucked inside this stamp — enter it below.</p>
+      <div class="otpStampPanel">
+        <div class="otpBoxes" id="otpBoxes">
+          <input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="otpPanelCap">S N A P M A R K • A I R &nbsp; M A I L</div>
+      </div>
+      <div class="authErr" id="otpErr"></div>
+      <div class="authMsg" id="otpMsg"></div>
+      <button class="authBtn" id="verifyBtn">Verify code</button>
+      <div class="resendRow">Didn't get it? <a id="resendLink" class="off">Resend code</a> <span id="resendTimer">(0:60)</span></div>
+    </div>
+
+    <div class="authNote">Protected by email OTP verification.<br>Passwords are stored securely hashed — never in plain text.</div>
+  </div>
+
+  <!-- ACCOUNT SHEET -->
+  <div id="acctWrap"><div id="acctSheet">
+    <div class="grab" style="width:42px;height:5px;border-radius:99px;background:#ddd6c6;margin:0 auto 14px"></div>
+    <div class="an" id="acctName">User</div>
+    <div class="ae" id="acctEmail">email</div>
+    <button class="bigBtn" id="logoutBtn" style="background:#b3372a">Logout</button>
+    <button class="bigBtn" id="acctClose" style="background:#ece5d3;color:var(--ink)">Close</button>
+  </div></div>
+
+  <input type="file" id="fileIn" accept="image/*" hidden>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const filmView = $('#filmView'), camBg = $('#camBg');
+let source=null, stream=null, cutterIdx=0, mode='stamp', zoom=1;
+const CUTCLS = ['', 'sq', 'wide'];
+let frameStyle='none', pendingStamp=null, viewingId=null;
+let stamps = JSON.parse(localStorage.getItem('snapmark_stamps')||'[]');
+let colls  = JSON.parse(localStorage.getItem('snapmark_colls')||'["My Collection"]');
+let projects = JSON.parse(localStorage.getItem('snapmark_projects')||'[]');
+let letters = JSON.parse(localStorage.getItem('snapmark_letters')||'{"handle":"","sent":[]}');
+let activeColl = colls[0]||'My Collection', gridColl='__all', curProj=null, letterTab='recv';
+
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1900); }
+
+/* ---------- Cloudinary (photo cloud storage) ---------- */
+const CLOUD={ name:'wemovmw9', preset:'snapmark' };
+async function uploadToCloud(rec){
+  try{
+    const fd=new FormData();
+    fd.append('file', rec.img);
+    fd.append('upload_preset', CLOUD.preset);
+    fd.append('folder', 'snapmark');
+    const r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD.name+'/image/upload', {method:'POST', body:fd});
+    const j=await r.json();
+    if(j.secure_url){ rec.img=j.secure_url; rec.cloud=true; saveAll(); syncStamp(rec); return true; }
+  }catch(e){}
+  return false;
+}
+
+/* ---------- Server + Auth (Scribly-style) ---------- */
+const API = window.SNAPMARK_API || (location.protocol.startsWith('http') ? location.origin + '/api' : 'http://localhost:8792/api');
+let session = JSON.parse(localStorage.getItem('snapmark_session') || 'null');
+async function api(action, params){
+  try{
+    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, ...params }) });
+    return await r.json();
+  }catch(e){ return { ok:false, error:'Could not reach the server' }; }
+}
+function syncStamp(rec){ if(session && rec.cloud) api('saveStamp', { token: session.token, stamp:{ id: rec.id, img: rec.img, label: rec.label, coll: rec.coll, dk: rec.dk } }); }
+
+let otpCtx = { mode:'signup', email:'' };
+let resendTimerInt = null;
+function authView(v){
+  ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+  document.getElementById('view'+v[0].toUpperCase()+v.slice(1)).style.display='block';
+  $('#authScreen').classList.toggle('otpMode', v==='otp');
+}
+$('#tabLogin').onclick=()=>authView('login');
+$('#tabSignup').onclick=()=>authView('signup');
+$('#tabLogin2').onclick=()=>authView('login');
+$('#tabSignup2').onclick=()=>authView('signup');
+$('#forgotLink').onclick=()=>{ $('#rsEmail').value=$('#liEmail').value; authView('resetEmail'); };
+$('#backLogin').onclick=()=>authView('login');
+$('#otpBack').onclick=()=>authView(otpCtx.mode==='signup' ? 'signup' : 'resetEmail');
+document.querySelectorAll('.eyeBtn').forEach(b=>{ b.onclick=()=>{ const f=document.getElementById(b.dataset.eye); f.type = f.type==='password' ? 'text':'password'; }; });
+
+function startResendTimer(){
+  let left=60; const link=$('#resendLink'), txt=$('#resendTimer');
+  link.classList.add('off'); txt.textContent='(0:60)';
+  clearInterval(resendTimerInt);
+  resendTimerInt=setInterval(()=>{ left--;
+    if(left<=0){ clearInterval(resendTimerInt); link.classList.remove('off'); txt.textContent=''; }
+    else txt.textContent='(0:'+String(left).padStart(2,'0')+')';
+  }, 1000);
+}
+function gotoOtp(mode, email){
+  otpCtx={ mode, email };
+  $('#otpEmailTxt').textContent=email;
+  document.querySelectorAll('#otpBoxes .otpBox').forEach(b=>b.value='');
+  $('#otpErr').textContent=''; $('#otpMsg').textContent='';
+  authView('otp'); startResendTimer();
+  setTimeout(()=>{ const f=document.querySelector('#otpBoxes .otpBox'); if(f) f.focus(); }, 80);
+}
+const otpBoxesEl=[...document.querySelectorAll('#otpBoxes .otpBox')];
+otpBoxesEl.forEach((box,i)=>{
+  box.addEventListener('input', ()=>{ box.value=box.value.replace(/\D/g,'').slice(-1); if(box.value && i<5) otpBoxesEl[i+1].focus(); });
+  box.addEventListener('keydown', e=>{ if(e.key==='Backspace' && !box.value && i>0) otpBoxesEl[i-1].focus(); });
+  box.addEventListener('paste', e=>{ e.preventDefault(); const t=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,6);
+    t.split('').forEach((ch,j)=>{ if(otpBoxesEl[j]) otpBoxesEl[j].value=ch; }); if(t.length) otpBoxesEl[Math.min(t.length,5)].focus(); });
+});
+const otpValue=()=>otpBoxesEl.map(b=>b.value).join('');
+$('#suPass').addEventListener('input', ()=>{
+  const v=$('#suPass').value; let s=0;
+  if(v.length>=6) s++; if(v.length>=10) s++; if(/\d/.test(v)) s++; if(/[^A-Za-z0-9]/.test(v)) s++;
+  const cols=['#d9534f','#e9a13b','#e9a13b','#4c9a52'];
+  [...$('#strengthBar').children].forEach((bar,i)=>{ bar.style.background = i<s ? cols[s-1] : '#e9e2cf'; });
+  $('#strengthTxt').textContent = ['Too short — at least 6 characters.','Weak password.','Good password.','Strong password.','Excellent password.'][s] || '';
+});
+function setBusy(btn, busy, txt){ if(busy){ btn.dataset.old=btn.textContent; btn.textContent=txt; btn.disabled=true; } else { btn.textContent=btn.dataset.old||btn.textContent; btn.disabled=false; } }
+
+$('#otpBtn').onclick=async(e)=>{
+  const email=$('#suEmail').value.trim(), name=$('#suName').value.trim(), pass=$('#suPass').value;
+  if(name.length<2){ $('#signupErr').textContent='Please enter your name'; return; }
+  if(pass.length<6){ $('#signupErr').textContent='Password must be at least 6 characters'; return; }
+  setBusy(e.target, true, 'Sending code…');
+  const r=await api('requestSignupOtp', { email });
+  setBusy(e.target, false);
+  if(r.ok){ gotoOtp('signup', email); if(!r.mailed) $('#otpMsg').textContent='Email sending is not configured on the server yet (dev mode)'; }
+  else $('#signupErr').textContent=r.error;
+};
+$('#verifyBtn').onclick=async(e)=>{
+  const code=otpValue();
+  if(code.length<6){ $('#otpErr').textContent='Enter all 6 digits'; return; }
+  setBusy(e.target, true, 'Verifying…');
+  const v=await api('verifyOtp', { email: otpCtx.email, code, purpose: otpCtx.mode });
+  if(!v.ok){ setBusy(e.target, false); $('#otpErr').textContent=v.error;
+    const bx=$('#otpBoxes'); bx.classList.remove('shake'); void bx.offsetWidth; bx.classList.add('shake'); return; }
+  if(otpCtx.mode==='signup'){
+    const r=await api('register', { name:$('#suName').value, email: otpCtx.email, password:$('#suPass').value, code });
+    setBusy(e.target, false);
+    if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+      toast('Welcome, '+r.user.name+'! 🎉'); enterApp(); }
+    else $('#otpErr').textContent=r.error;
+  } else {
+    setBusy(e.target, false); authView('newPass');
+  }
+};
+$('#resendLink').onclick=async()=>{
+  const action = otpCtx.mode==='signup' ? 'requestSignupOtp' : 'requestResetOtp';
+  const r=await api(action, { email: otpCtx.email });
+  if(r.ok){ $('#otpMsg').textContent='✓ New code sent'; startResendTimer(); }
+  else $('#otpErr').textContent=r.error;
+};
+$('#loginBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Logging in…');
+  const r=await api('login', { email:$('#liEmail').value, password:$('#liPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+    toast('Welcome back, '+r.user.name+'!'); enterApp(); }
+  else $('#loginErr').textContent=r.error;
+};
+$('#rsSendBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Sending…');
+  const r=await api('requestResetOtp', { email: $('#rsEmail').value.trim() });
+  setBusy(e.target, false);
+  if(r.ok){ gotoOtp('reset', $('#rsEmail').value.trim()); if(!r.mailed) $('#otpMsg').textContent='Email sending is not configured on the server yet (dev mode)'; }
+  else $('#resetErr').textContent=r.error;
+};
+$('#rsBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Saving…');
+  const r=await api('resetPassword', { email: otpCtx.email, code: otpValue(), newPassword: $('#rsPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ authView('login'); $('#liEmail').value=otpCtx.email; $('#loginErr').textContent='';
+    setTimeout(()=>toast('✓ Password changed — log in with your new password'), 60); }
+  else $('#newPassErr').textContent=r.error;
+};
+async function enterApp(){
+  $('#authScreen').style.display='none';
+  if(!session) return;
+  $('#avatarBtn').textContent=(session.user.name||'S').trim()[0].toUpperCase();
+  const r=await api('listStamps', { token: session.token });
+  if(r.ok){
+    const serverIds=new Set(r.stamps.map(s=>String(s.id)));
+    const localOnly=stamps.filter(s=>!serverIds.has(String(s.id)));
+    stamps=[...r.stamps, ...localOnly];
+    if(r.colls && r.colls.length) colls=r.colls;
+    activeColl=colls[0]||'My Collection';
+    saveAll(); fillCollSelects(); renderFolders();
+    localOnly.forEach(s=>{ if(s.cloud) syncStamp(s); else uploadToCloud(s); });
+    api('setCollections', { token: session.token, colls });
+  }
+}
+$('#logoutBtn').onclick=()=>{
+  session=null; localStorage.removeItem('snapmark_session');
+  stamps=[]; localStorage.removeItem('snapmark_stamps');
+  location.reload();
+};
+$('#acctClose').onclick=()=>$('#acctWrap').classList.remove('on');
+$('#acctWrap').onclick=e=>{ if(e.target.id==='acctWrap') $('#acctWrap').classList.remove('on'); };
+function saveAll(){ try{ localStorage.setItem('snapmark_stamps',JSON.stringify(stamps)); localStorage.setItem('snapmark_colls',JSON.stringify(colls));
+  localStorage.setItem('snapmark_projects',JSON.stringify(projects)); localStorage.setItem('snapmark_letters',JSON.stringify(letters)); }catch(e){} }
+function dateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* ---------- sources ---------- */
+function bgSet(el){ camBg.querySelectorAll('video,img,.camEmpty').forEach(n=>n.remove()); if(el) camBg.prepend(el); }
+function setSourceImg(img){
+  stopCam();
+  const mb=$('#mediaBox'); mb.querySelectorAll('video,img,.fvEmpty').forEach(n=>n.remove());
+  const v=img.cloneNode(); v.style.cssText='width:100%;height:100%;object-fit:cover;display:block'; mb.appendChild(v);
+  const b=img.cloneNode(); b.style.cssText='width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.92)'; bgSet(b);
+  source={type:'img', el:img};
+}
+async function startCam(){
+  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    const mk=()=>{ const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; v.srcObject=stream;
+      v.style.cssText='width:100%;height:100%;object-fit:cover;display:block'; return v; };
+    const mb=$('#mediaBox'); mb.querySelectorAll('video,img,.fvEmpty').forEach(n=>n.remove()); mb.appendChild(mk()); bgSet(mk());
+    source={type:'video', el:mb.querySelector('video')};
+  }catch(e){ toast('Camera unavailable — use the gallery or the ✦ sample'); }
+}
+function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
+$('#camBtn').onclick=startCam;
+$('#galleryBtn').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+  const img=new Image(); img.onload=()=>setSourceImg(img); img.src=URL.createObjectURL(f); };
+$('#sampleBtn').onclick=()=>{
+  const c=document.createElement('canvas'); c.width=800; c.height=800; const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,800); g.addColorStop(0,'#ffd98e'); g.addColorStop(.55,'#ff9d6c'); g.addColorStop(1,'#e2603f');
+  x.fillStyle=g; x.fillRect(0,0,800,800);
+  x.fillStyle='#fff3b0'; x.beginPath(); x.arc(560,240,90,0,7); x.fill();
+  x.fillStyle='#7a4a2b'; x.beginPath(); x.moveTo(0,800); x.lineTo(260,430); x.lineTo(520,800); x.fill();
+  x.fillStyle='#5d3a22'; x.beginPath(); x.moveTo(240,800); x.lineTo(560,380); x.lineTo(800,640); x.lineTo(800,800); x.fill();
+  x.fillStyle='#2e5d33'; x.beginPath(); x.arc(150,610,70,0,7); x.arc(215,560,55,0,7); x.fill();
+  x.fillStyle='#4a3220'; x.fillRect(168,640,16,90);
+  const img=new Image(); img.onload=()=>setSourceImg(img); img.src=c.toDataURL('image/png');
+  toast('Sample photo loaded — now tap the shutter 📸');
+};
+$('#zoomTag').onclick=()=>{ zoom=zoom===1?2:1; $('#zoomTag').textContent=zoom+'x';
+  filmView.querySelectorAll('video,img').forEach(el=>el.style.transform=zoom===2?'scale(1.55)':''); };
+$('#avatarBtn').onclick=()=>{
+  if(session){ $('#acctName').textContent=session.user.name; $('#acctEmail').textContent=session.user.email; $('#acctWrap').classList.add('on'); }
+  else toast('Please log in first');
+};
+
+/* cutters */
+function setCutter(i){ cutterIdx=(i+3)%3; filmView.classList.remove('sq','wide'); if(CUTCLS[cutterIdx]) filmView.classList.add(CUTCLS[cutterIdx]); }
+let tY=null;
+$('#camScreen').addEventListener('touchstart',e=>tY=e.touches[0].clientY,{passive:true});
+$('#camScreen').addEventListener('touchend',e=>{ if(tY===null) return; const dy=e.changedTouches[0].clientY-tY;
+  if(Math.abs(dy)>46 && e.target.closest('#cutterWrap')) setCutter(cutterIdx+(dy<0?1:-1)); tY=null; },{passive:true});
+$('#modeStamp').onclick=()=>setMode('stamp');
+$('#modeFrame').onclick=()=>setMode('frame');
+function setMode(m){ mode=m; $('#modeStamp').classList.toggle('sel',m==='stamp'); $('#modeFrame').classList.toggle('sel',m==='frame'); }
+
+/* ---------- stamp making (deep scallop edges, like the reference) ---------- */
+function rr(x,px,py,w,h,r){ x.beginPath(); x.moveTo(px+r,py); x.arcTo(px+w,py,px+w,py+h,r); x.arcTo(px+w,py+h,px,py+h,r); x.arcTo(px,py+h,px,py,r); x.arcTo(px,py,px+w,py,r); x.closePath(); }
+function cropDraw(x, el, isVideo, dx, dy, dw, dh, zoomF){
+  const sw=isVideo?el.videoWidth:el.naturalWidth, sh=isVideo?el.videoHeight:el.naturalHeight;
+  const dR=dw/dh; let sW=sw, sH=sw/dR; if(sH>sh){ sH=sh; sW=sh*dR; }
+  sW/=zoomF; sH/=zoomF; const sx=(sw-sW)/2, sy=(sh-sH)/2;
+  x.save(); rr(x,dx,dy,dw,dh,4); x.clip(); x.drawImage(el,sx,sy,sW,sH,dx,dy,dw,dh); x.restore();
+}
+function scallop(x,W,H){
+  x.globalCompositeOperation='destination-out';
+  const r=19, step=30;
+  for(let hx=6; hx<W; hx+=step){ x.beginPath(); x.arc(hx,0,r,0,7); x.fill(); x.beginPath(); x.arc(hx,H,r,0,7); x.fill(); }
+  for(let hy=6; hy<H; hy+=step){ x.beginPath(); x.arc(0,hy,r,0,7); x.fill(); x.beginPath(); x.arc(W,hy,r,0,7); x.fill(); }
+  x.globalCompositeOperation='source-over';
+}
+function makeStamp(el, isVideo, style){
+  const W=620, B= style==='template'?60:44, pW=W-B*2, pH=Math.round(pW*(cutterIdx===1?1.0:cutterIdx===2?0.74:1.14));
+  const c=document.createElement('canvas'); c.width=W; c.height=pH+B*2; const x=c.getContext('2d');
+  x.fillStyle= style==='template' ? '#fdf6e3':'#ffffff'; rr(x,3,3,W-6,c.height-6,8); x.fill();
+  cropDraw(x, el, isVideo, B, B, pW, pH, zoom);
+  if(style==='template'){
+    x.strokeStyle='#b3372a'; x.lineWidth=5; rr(x,B-11,B-11,pW+22,pH+22,5); x.stroke();
+    x.fillStyle='#b3372a'; x.font='900 24px Inter'; x.textAlign='left'; x.fillText('SNAPMARK', B-4, 42);
+    x.textAlign='right'; x.fillText('1₹', W-B+4, 42);
+    x.font='600 18px Inter'; x.fillStyle='#8a7f63'; x.textAlign='center';
+    x.fillText('· snap · collect · remember ·', W/2, c.height-20);
+  }
+  scallop(x,W,c.height);
+  return c.toDataURL('image/png');
+}
+function makeFrame(el, isVideo){
+  const W=620, side=32, top=32, bottom=128, pW=W-side*2, pH=Math.round(pW*(cutterIdx===1?1.0:cutterIdx===2?0.75:1.12));
+  const c=document.createElement('canvas'); c.width=W; c.height=top+pH+bottom; const x=c.getContext('2d');
+  x.fillStyle='#fffdf6'; x.fillRect(0,0,W,c.height);
+  cropDraw(x, el, isVideo, side, top, pW, pH, zoom);
+  x.fillStyle='#3a352a'; x.font='600 40px Caveat'; x.textAlign='center';
+  x.fillText('a little moment ✦', W/2, top+pH+60);
+  x.font='700 20px Inter'; x.fillStyle='#a3987d';
+  x.fillText(new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}), W/2, top+pH+96);
+  return c.toDataURL('image/png');
+}
+
+/* ---------- capture + eject animation ---------- */
+$('#shutter').onclick=()=>{
+  if(!source){ toast('Turn on the camera or choose a photo first 📸'); return; }
+  const metal=$('#metal'); metal.classList.add('press');
+  setTimeout(()=>{
+    const fl=$('#flash'); fl.style.opacity=.9; setTimeout(()=>fl.style.opacity=0,110);
+    const isVideo=source.type==='video', now=new Date();
+    const label=(mode==='stamp'?'New stamp · ':'New frame · ')+now.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    const urlNone = mode==='stamp' ? makeStamp(source.el,isVideo,'none') : makeFrame(source.el,isVideo);
+    const urlTpl  = mode==='stamp' ? makeStamp(source.el,isVideo,'template') : urlNone;
+    pendingStamp={ urlNone, urlTpl, label, dk:dateKey(now) };
+    metal.classList.remove('press');
+    const ej=$('#ejectImg'); ej.src=urlNone; ej.classList.remove('go'); void ej.offsetWidth; ej.classList.add('go');
+    const mb=$('#mediaBox'); mb.style.visibility='hidden'; filmView.style.background='#141311';
+    setTimeout(()=>{
+      mb.style.visibility=''; filmView.style.background='';
+      ej.classList.remove('go'); ej.style.display='none'; setTimeout(()=>ej.style.display='',50);
+      $('#revStamp').src=urlNone; $('#cardNoneImg').src=urlNone; $('#cardTplImg').src=urlTpl;
+      $('#revTitle').textContent = mode==='stamp' ? 'None':'Frame';
+      $('#revDate').textContent=label;
+      document.querySelectorAll('.revCard').forEach(cd=>cd.classList.toggle('sel', cd.dataset.f==='none')); frameStyle='none';
+      fillCollSelects();
+      showScreen('reviewScreen');
+      const w=$('#revStampWrap'); w.classList.remove('pop'); void w.offsetWidth; w.classList.add('pop');
+    }, 820);
+  }, 200);
+};
+document.querySelectorAll('.revCard').forEach(cd=>{
+  cd.onclick=()=>{ document.querySelectorAll('.revCard').forEach(o=>o.classList.remove('sel')); cd.classList.add('sel');
+    frameStyle=cd.dataset.f; $('#revTitle').textContent= frameStyle==='none'?'None':'Template';
+    if(pendingStamp) $('#revStamp').src= frameStyle==='none'? pendingStamp.urlNone : pendingStamp.urlTpl; };
+});
+$('#retakeBtn').onclick=()=>showScreen('camScreen');
+$('#saveBtn').onclick=()=>{
+  if(!pendingStamp) return;
+  const coll=$('#revCollSel').value||activeColl; activeColl=coll;
+  const rec={ id:Date.now(), img: frameStyle==='none'?pendingStamp.urlNone:pendingStamp.urlTpl,
+    label:pendingStamp.label, coll, dk:pendingStamp.dk, cloud:false };
+  stamps.unshift(rec);
+  saveAll(); toast('Saved to "'+coll+'" 📮');
+  gridColl=coll; renderFolders(); openGrid(coll); setNav(1);
+  uploadToCloud(rec).then(ok=>{ if(ok) toast('Backed up to the cloud ☁️'); });
+};
+
+/* ---------- collections ---------- */
+const PALETTE=['#e6ccc4','#e7d3ab','#dfe4cf','#d3dee8','#eee3c0','#e3d5e8'];
+function fillCollSelects(){
+  const opts=colls.map(c=>`<option ${c===activeColl?'selected':''}>${c}</option>`).join('');
+  $('#collPill').innerHTML=opts; $('#revCollSel').innerHTML=opts;
+}
+$('#collPill').onchange=e=>{ activeColl=e.target.value; fillCollSelects(); toast('New stamps will go to "'+activeColl+'"'); };
+function collCount(name){ return name==='__all' ? stamps.length : stamps.filter(s=>s.coll===name).length; }
+function renderFolders(){
+  const list=$('#folderList'); list.innerHTML='';
+  const mk=(name, title, bg, imgs)=>{
+    const d=document.createElement('div'); d.className='folder'; d.style.background=bg;
+    d.innerHTML=`<h3>${title}</h3><p>${collCount(name)} stamps</p>`+
+      (imgs? `<div class="fimgs">${imgs.map(i=>`<img src="${i}">`).join('')}</div>`:'');
+    d.onclick=()=>openGrid(name); list.appendChild(d);
+  };
+  mk('__all','All Stamps','linear-gradient(100deg,#e8e2d2,#dfe5da)', stamps.slice(0,3).map(s=>s.img));
+  colls.forEach((c,i)=>mk(c, c, PALETTE[i%PALETTE.length], null));
+}
+$('#fab').onclick=()=>{
+  const name=prompt('Name your new collection (e.g. Goa Trip, New York, Family)');
+  if(name && name.trim()){ colls.push(name.trim()); activeColl=name.trim(); saveAll(); fillCollSelects(); renderFolders();
+    if(session) api('setCollections', { token: session.token, colls });
+    toast('Collection created: '+activeColl); }
+};
+function openGrid(name){
+  gridColl=name; $('#gridTitle').textContent= name==='__all'?'All Stamps':name;
+  const list= name==='__all'? stamps : stamps.filter(s=>s.coll===name);
+  const g=$('#stampGrid'); g.innerHTML='';
+  $('#gridEmpty').style.display= list.length? 'none':'block';
+  list.forEach((s,i)=>{ const im=new Image(); im.src=s.img; im.style.animationDelay=(i*0.04)+'s';
+    im.onclick=()=>{ viewingId=s.id; $('#viewerImg').src=s.img; $('#viewer').classList.add('on'); }; g.appendChild(im); });
+  showScreen('gridScreen');
+}
+$('#gridBack').onclick=()=>{ showScreen('collScreen'); setNav(1); };
+$('#manageBtn').onclick=()=>toast('Manage mode — coming soon: multi-select delete and move');
+$('#closeViewer').onclick=()=>$('#viewer').classList.remove('on');
+$('#delBtn').onclick=()=>{ stamps=stamps.filter(s=>s.id!==viewingId); saveAll();
+  if(session) api('deleteStamp', { token: session.token, id: viewingId });
+  $('#viewer').classList.remove('on'); openGrid(gridColl); toast('Deleted'); };
+$('#dlBtn').onclick=()=>{ const s=stamps.find(s=>s.id===viewingId); if(!s) return;
+  const a=document.createElement('a'); a.href=s.img; a.download='snapmark.png'; a.click(); };
+
+/* ---------- calendar ---------- */
+function renderCalendar(){
+  const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
+  $('#calDay').textContent=String(now.getDate()).padStart(2,'0');
+  $('#calMonth').textContent=now.toLocaleDateString('en-IN',{month:'long'});
+  $('#calYear').textContent=y;
+  const wrap=$('#calWrap'); wrap.innerHTML='';
+  const byDay={}; stamps.forEach(s=>{ (byDay[s.dk]=byDay[s.dk]||[]).push(s); });
+  const dowEl=document.createElement('div'); dowEl.className='dow';
+  dowEl.innerHTML=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div>${d}</div>`).join(''); wrap.appendChild(dowEl);
+  const mkMonth=(yy,mm,label)=>{
+    if(label){ const lab=document.createElement('div'); lab.className='monthLab';
+      lab.innerHTML=`${label} <span>${yy}</span>`; wrap.appendChild(lab); }
+    const grid=document.createElement('div'); grid.className='calGrid';
+    const first=new Date(yy,mm,1).getDay(), days=new Date(yy,mm+1,0).getDate(), prevDays=new Date(yy,mm,0).getDate();
+    for(let i=first-1;i>=0;i--){ const d=prevDays-i; grid.appendChild(cell(yy,mm-1,d,true,byDay)); }
+    for(let d=1; d<=days; d++) grid.appendChild(cell(yy,mm,d,false,byDay, yy===y&&mm===m&&d===now.getDate()));
+    wrap.appendChild(grid);
+  };
+  const cell=(yy,mm,d,dim,byDay,isToday)=>{
+    const c=document.createElement('div'); c.className='cell'+(dim?' dim':'')+(isToday?' today':'');
+    const key=dateKey(new Date(yy,mm,d)); c.innerHTML=`<span>${d}</span>`;
+    if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; c.appendChild(im); }
+    c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
+    return c;
+  };
+  const pm = m===0?11:m-1, py = m===0?y-1:y;
+  mkMonth(py, pm, null);
+  mkMonth(y, m, now.toLocaleDateString('en-IN',{month:'long'}));
+}
+function openSheet(date, list){
+  $('#sheetTitle').textContent=date.toLocaleDateString('en-IN',{weekday:'long', month:'short', day:'numeric'});
+  const box=$('#sheetStamps'); box.innerHTML='';
+  $('#sheetEmpty').style.display=list.length?'none':'block';
+  list.forEach(s=>{ const im=new Image(); im.src=s.img;
+    im.onclick=()=>{ viewingId=s.id; $('#viewerImg').src=s.img; $('#viewer').classList.add('on'); }; box.appendChild(im); });
+  $('#sheetWrap').classList.add('on');
+}
+$('#sheetWrap').onclick=e=>{ if(e.target.id==='sheetWrap') $('#sheetWrap').classList.remove('on'); };
+
+/* ---------- scrapbook / projects ---------- */
+const PATTERNS=[
+  'repeating-linear-gradient(0deg,#b9c48e 0 26px,#aab87f 26px 27px),repeating-linear-gradient(90deg,#b9c48e 0 26px,#aab87f 26px 27px)',
+  'radial-gradient(circle at 30% 30%, #f2c94c 0 16%, #e88ca0 16% 32%, #a8c3e8 32% 55%, #f6ead2 55%)',
+  'repeating-linear-gradient(45deg,#e8b4a0 0 18px,#f2d3c4 18px 36px)',
+  'radial-gradient(circle,#7d9b76 2.5px,transparent 3px) 0 0/22px 22px,#eef0e2'];
+function renderProjects(){
+  const g=$('#projGrid'); g.innerHTML='';
+  if(!projects.length){ g.innerHTML='<div class="emptyNote" style="grid-column:1/-1"><span class="big">no projects yet</span>Tap + above to create your first scrapbook project.</div>'; return; }
+  projects.forEach((p,i)=>{
+    const d=document.createElement('div'); d.className='proj';
+    d.innerHTML=`<div class="cov" style="background:${PATTERNS[p.pat%PATTERNS.length]}"><div class="pt">${p.name}</div></div>
+      <div class="meta"><b>${p.name}</b><p>${p.stampIds.length} stamps</p></div>`;
+    d.onclick=()=>openProject(p.id); g.appendChild(d);
+  });
+}
+$('#newProjBtn').onclick=()=>{
+  const name=prompt('Name your project (e.g. A Lovely Day, Goa Diary)');
+  if(name && name.trim()){ projects.unshift({ id:Date.now(), name:name.trim(), pat:projects.length%PATTERNS.length, stampIds:[] });
+    saveAll(); renderProjects(); toast('Project created 📖'); }
+};
+function openProject(id){
+  curProj=projects.find(p=>p.id===id); if(!curProj) return;
+  $('#projTitle').textContent=curProj.name;
+  const page=$('#projPage'); page.innerHTML='';
+  $('#projEmpty').style.display=curProj.stampIds.length?'none':'block';
+  curProj.stampIds.forEach((sid,i)=>{
+    const s=stamps.find(s=>s.id===sid); if(!s) return;
+    const im=new Image(); im.src=s.img;
+    const cols=3, w=29; const x=4+(i%cols)*33, y=18+Math.floor(i/cols)*215;
+    im.style.cssText=`position:absolute;left:${x}%;top:${y}px;width:${w}%;transform:rotate(${i%2?2.5:-2.5}deg);filter:drop-shadow(0 6px 12px rgba(0,0,0,.2))`;
+    page.appendChild(im);
+  });
+  page.style.minHeight=(150+Math.ceil(Math.max(1,curProj.stampIds.length)/3)*225)+'px';
+  showScreen('projScreen');
+}
+$('#projBack').onclick=()=>{ showScreen('bookScreen'); setNav(3); renderProjects(); };
+$('#projAddBtn').onclick=()=>{
+  if(!curProj) return;
+  const avail=stamps.filter(s=>!curProj.stampIds.includes(s.id));
+  if(!avail.length){ toast('No new stamps — make some stamps first'); return; }
+  const s=avail[0]; curProj.stampIds.push(s.id); saveAll(); openProject(curProj.id); toast('Stamp placed — tap again to add more');
+};
+
+/* ---------- letters ---------- */
+function renderLetters(){
+  const body=$('#letterBody');
+  $('#tabRecv').classList.toggle('sel', letterTab==='recv');
+  $('#tabSent').classList.toggle('sel', letterTab==='sent');
+  if(!letters.handle){
+    body.innerHTML=`<div class="emptyNote" style="padding-top:80px">
+      <svg viewBox="0 0 48 48" width="64" height="64" fill="none" stroke="#a49d88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="38" height="27" rx="3"/><path d="M6 13l18 14L42 13"/></svg>
+      <span class="big" style="margin-top:14px;font-size:22px">Sign in to open letters</span>
+      Send and receive handwritten letters with friends<br>by @handle.
+      <button class="bigBtn" id="signInBtn">Sign in — create your @handle</button></div>`;
+    $('#signInBtn').onclick=()=>{ const h=prompt('Choose your @handle (e.g. @tirth)');
+      if(h && h.trim()){ letters.handle=h.trim().startsWith('@')?h.trim():'@'+h.trim(); saveAll(); renderLetters(); toast('Welcome, '+letters.handle+' ✉️'); } };
+    return;
+  }
+  if(letterTab==='recv'){
+    body.innerHTML=`<div class="emptyNote" style="padding-top:60px"><span class="big">no letters yet</span>
+      When a friend sends you a letter, it will appear here. Meanwhile, write your first letter from the Sent tab!</div>
+      <button class="bigBtn" id="writeBtn">✍️ Write a letter</button>`;
+    $('#writeBtn').onclick=()=>{ letterTab='sent'; renderLetters(); setTimeout(composeLetter,60); };
+    return;
+  }
+  let html=`<button class="bigBtn" id="writeBtn">✍️ Write a new letter</button>`;
+  if(!letters.sent.length) html+=`<div class="emptyNote"><span class="big">nothing sent</span>No letters sent yet.</div>`;
+  letters.sent.slice().reverse().forEach(L=>{
+    const s=stamps.find(s=>s.id===L.stampId);
+    html+=`<div class="letterCard">${s?`<img src="${s.img}">`:''}<div><div class="lm">${L.msg}</div><div class="lt">To ${L.to} · ${L.date}</div></div></div>`;
+  });
+  body.innerHTML=html;
+  $('#writeBtn').onclick=composeLetter;
+}
+function composeLetter(){
+  if(!stamps.length){ toast('Make a stamp first, then write a letter'); return; }
+  const to=prompt('Who is this letter for? (@handle)');
+  if(!to) return;
+  const msg=prompt('Write your handwritten message:');
+  if(!msg) return;
+  letters.sent.push({ to: to.startsWith('@')?to:'@'+to, msg, stampId: stamps[0].id,
+    date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) });
+  saveAll(); renderLetters(); toast('Letter sent ✉️ (saved on this device)');
+}
+$('#tabRecv').onclick=()=>{ letterTab='recv'; renderLetters(); };
+$('#tabSent').onclick=()=>{ letterTab='sent'; renderLetters(); };
+
+/* ---------- nav ---------- */
+const NAVMAP={ camScreen:0, collScreen:1, gridScreen:1, calScreen:2, bookScreen:3, projScreen:3, letterScreen:4, reviewScreen:0 };
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $('#'+id).classList.add('on');
+  $('#tabbar').style.display = id==='reviewScreen' ? 'none':'flex';
+  $('#tabbar').classList.toggle('dark', id==='camScreen'||id==='reviewScreen');
+  setNav(NAVMAP[id]??0);
+  if(id==='collScreen') renderFolders();
+  if(id==='calScreen') renderCalendar();
+  if(id==='bookScreen') renderProjects();
+  if(id==='letterScreen') renderLetters();
+}
+function setNav(i){ document.querySelectorAll('#tabbar button').forEach((b,j)=>b.classList.toggle('sel', j===i)); }
+document.querySelectorAll('#tabbar button').forEach((b,i)=>{ b.onclick=()=>{ showScreen(b.dataset.go); }; });
+fillCollSelects(); renderFolders();
+/* login hai to app me ghuso, warna auth screen rahegi */
+if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
+</script>
+</body>
+</html>
