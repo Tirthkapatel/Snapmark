@@ -406,6 +406,17 @@
   .otpBox.digitPop{ animation:digitPop .22s cubic-bezier(.34,1.56,.64,1); }
   @keyframes digitPop{ 30%{ transform:scale(1.16);} }
   #sheetStamps img{ animation:popIn .32s backwards; }
+  /* ---------- v19: photo ke kinare par asli stamp wali perforated cut-line (preview = final stamp) ---------- */
+  .perfCut{ position:absolute; inset:0; pointer-events:none; z-index:2; display:none;
+    background-image:
+      radial-gradient(circle 5.5px at 50% 0, #0b0b0c 5px, transparent 6.2px),
+      radial-gradient(circle 5.5px at 50% 100%, #0b0b0c 5px, transparent 6.2px),
+      radial-gradient(circle 5.5px at 0 50%, #0b0b0c 5px, transparent 6.2px),
+      radial-gradient(circle 5.5px at 100% 50%, #0b0b0c 5px, transparent 6.2px);
+    background-size:12px 12px, 12px 12px, 12px 12px, 12px 12px;
+    background-repeat:repeat-x, repeat-x, repeat-y, repeat-y;
+    background-position:top left, bottom left, top left, top right; }
+  #filmView.stampMode .perfCut{ display:block; }
 </style>
 </head>
 <body>
@@ -425,7 +436,7 @@
       <div id="cutterWrap">
         <div id="metal">
           <div id="filmFrame">
-            <div id="filmView"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div></div>
+            <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div><div class="perfCut"></div></div>
           </div>
           <div id="filmLogo">S N A P M A R K</div>
         </div>
@@ -1069,7 +1080,8 @@ $('#camScreen').addEventListener('touchend',e=>{ if(tY===null) return; const dy=
   if(Math.abs(dy)>46 && e.target.closest('#cutterWrap')) setCutter(cutterIdx+(dy<0?1:-1)); tY=null; },{passive:true});
 $('#modeStamp').onclick=()=>setMode('stamp');
 $('#modeFrame').onclick=()=>setMode('frame');
-function setMode(m){ mode=m; $('#modeStamp').classList.toggle('sel',m==='stamp'); $('#modeFrame').classList.toggle('sel',m==='frame'); }
+function setMode(m){ mode=m; $('#modeStamp').classList.toggle('sel',m==='stamp'); $('#modeFrame').classList.toggle('sel',m==='frame');
+  filmView.classList.toggle('stampMode', m==='stamp'); }
 
 /* ---------- stamp making (deep scallop edges, like the reference) ---------- */
 function rr(x,px,py,w,h,r){ x.beginPath(); x.moveTo(px+r,py); x.arcTo(px+w,py,px+w,py+h,r); x.arcTo(px+w,py+h,px,py+h,r); x.arcTo(px,py+h,px,py,r); x.arcTo(px,py,px+w,py,r); x.closePath(); }
