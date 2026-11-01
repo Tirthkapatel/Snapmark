@@ -1078,9 +1078,18 @@ function cropDraw(x, el, isVideo, dx, dy, dw, dh, zoomF){
 }
 function scallop(x,W,H){
   x.globalCompositeOperation='destination-out';
-  const r=15.5, step=26;
-  for(let hx=6; hx<W; hx+=step){ x.beginPath(); x.arc(hx,0,r,0,7); x.fill(); x.beginPath(); x.arc(hx,H,r,0,7); x.fill(); }
-  for(let hy=6; hy<H; hy+=step){ x.beginPath(); x.arc(0,hy,r,0,7); x.fill(); x.beginPath(); x.arc(W,hy,r,0,7); x.fill(); }
+  /* Proper perforation (video jaisa): har kinare par barabar gol daant —
+     daant ki chaudi hi spacing hai, isliye har bite agle se theek milta hai
+     aur kone dono taraf se symmetric kat-te hain. */
+  const target=24;
+  const nx=Math.max(2, Math.round(W/target)), ny=Math.max(2, Math.round(H/target));
+  const px=W/nx, py=H/ny;
+  for(let i=0;i<nx;i++){ const cx=px*(i+0.5), r=px/2;
+    x.beginPath(); x.arc(cx,0,r,0,7); x.fill();
+    x.beginPath(); x.arc(cx,H,r,0,7); x.fill(); }
+  for(let i=0;i<ny;i++){ const cy=py*(i+0.5), r=py/2;
+    x.beginPath(); x.arc(0,cy,r,0,7); x.fill();
+    x.beginPath(); x.arc(W,cy,r,0,7); x.fill(); }
   x.globalCompositeOperation='source-over';
 }
 function makeStamp(el, isVideo, style){
