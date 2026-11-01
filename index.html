@@ -467,6 +467,7 @@
         <div style="flex:1"></div>
         <div class="roundDark" id="sampleBtn" title="Sample">✦</div>
         <div class="roundDark" id="camBtn" title="Camera">📷</div>
+        <div class="roundDark" id="flipBtn" title="Switch camera">🔄</div>
       </div>
       <div class="camHint">Swipe up or down to change cutter</div>
       <div id="cutterWrap">
@@ -1061,14 +1062,22 @@ function setSourceImg(img){
   const b=img.cloneNode(); b.style.cssText='width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.92)'; bgSet(b);
   source={type:'img', el:img};
 }
+let facing='environment';
 async function startCam(){
-  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-    const mk=()=>{ const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; v.srcObject=stream;
-      v.style.cssText='width:100%;height:100%;object-fit:cover;display:block'; return v; };
+  try{ stopCam();
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});
+    const mir=facing==='user' ? ';transform:scaleX(-1)' : '';
+    const mk=()=>{ const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; v.muted=true; v.srcObject=stream;
+      v.style.cssText='width:100%;height:100%;object-fit:cover;display:block'+mir; return v; };
     const mb=$('#mediaBox'); mb.querySelectorAll('video,img,.fvEmpty').forEach(n=>n.remove()); mb.appendChild(mk()); bgSet(mk());
     source={type:'video', el:mb.querySelector('video')};
   }catch(e){ toast('Camera unavailable — use the gallery or the ✦ sample'); }
 }
+$('#flipBtn').onclick=()=>{
+  facing = facing==='environment' ? 'user' : 'environment';
+  toast(facing==='user' ? 'Front camera 🤳' : 'Rear camera 📷');
+  if(stream) startCam();
+};
 function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
 $('#camBtn').onclick=startCam;
 $('#galleryBtn').onclick=()=>$('#fileIn').click();
@@ -1121,7 +1130,9 @@ function cropDraw(x, el, isVideo, dx, dy, dw, dh, zoomF){
   const sw=isVideo?el.videoWidth:el.naturalWidth, sh=isVideo?el.videoHeight:el.naturalHeight;
   const dR=dw/dh; let sW=sw, sH=sw/dR; if(sH>sh){ sH=sh; sW=sh*dR; }
   sW/=zoomF; sH/=zoomF; const sx=(sw-sW)/2, sy=(sh-sH)/2;
-  x.save(); rr(x,dx,dy,dw,dh,4); x.clip(); x.drawImage(el,sx,sy,sW,sH,dx,dy,dw,dh); x.restore();
+  x.save(); rr(x,dx,dy,dw,dh,4); x.clip();
+  if(isVideo && facing==='user'){ x.translate(dx*2+dw,0); x.scale(-1,1); }
+  x.drawImage(el,sx,sy,sW,sH,dx,dy,dw,dh); x.restore();
 }
 function scallop(x,W,H){
   x.globalCompositeOperation='destination-out';
