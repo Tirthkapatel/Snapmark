@@ -319,6 +319,38 @@
   .codeGrid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:12px 0 4px; }
   .codeChip{ font-family:'Inter'; font-weight:800; letter-spacing:1.2px; font-size:15px; text-align:center; background:#fbf9f3; border:1.5px dashed #cfc7ae; border-radius:10px; padding:10px 4px; }
   .setStat{ display:inline-block; background:#eef0e2; color:#4c6440; font-weight:700; font-size:12.5px; border-radius:999px; padding:5px 11px; margin-bottom:10px; }
+  /* ---------- v11: iOS-smooth animation pack ---------- */
+  .screen.on{ animation:scrIn2 .38s cubic-bezier(.32,.72,0,1); }
+  @keyframes scrIn2{ from{ opacity:0; transform:translateX(56px) scale(.985);} to{ opacity:1; transform:none;} }
+  #navPill{ position:absolute; top:50%; left:0; height:42px; width:52px; transform:translate(-50%,-50%); border-radius:999px;
+    background:rgba(35,33,28,.10); z-index:0; pointer-events:none; opacity:0;
+    transition:left .48s cubic-bezier(.34,1.45,.64,1), width .3s ease, opacity .25s ease, background .3s; }
+  #tabbar.dark #navPill{ background:rgba(255,255,255,.94); }
+  #tabbar button{ position:relative; z-index:1; transition:transform .18s ease; }
+  #tabbar button.sel{ background:transparent; }
+  #tabbar.dark button.sel{ background:transparent; }
+  #tabbar button.bump svg{ animation:navBump .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes navBump{ 30%{ transform:scale(1.22) rotate(-4deg);} 60%{ transform:scale(.94);} }
+  #toast{ transition:transform .45s cubic-bezier(.34,1.4,.64,1), opacity .3s ease; }
+  .stampCard{ animation:cardIn .38s cubic-bezier(.32,1.25,.44,1); }
+  @keyframes cardIn{ from{ opacity:0; transform:translateY(16px) scale(.97);} }
+  #viewer.on img{ animation:viewZoom .38s cubic-bezier(.3,1.4,.44,1); }
+  @keyframes viewZoom{ from{ transform:scale(.82) rotate(-2deg); opacity:0; } }
+  .segPill div, .segTabs div, .authTabs div{ transition:all .3s cubic-bezier(.3,1.3,.5,1); }
+  .segPill div:active, .segTabs div:active{ transform:scale(.94); }
+  .otpBox{ transition:border-color .2s ease, box-shadow .2s ease, transform .16s cubic-bezier(.34,1.56,.64,1); }
+  .otpBox:focus{ transform:scale(1.06); }
+  .revCard.sel .chk{ animation:chkPop .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes chkPop{ 0%{ transform:scale(.3) rotate(-30deg);} 100%{ transform:scale(1) rotate(0);} }
+  .proj{ transition:transform .15s ease; } .proj:active{ transform:scale(.96); }
+  .calGrid .cell{ transition:transform .12s ease; } .calGrid .cell:active{ transform:scale(.9); }
+  #sheet{ animation:sheetUp .4s cubic-bezier(.32,.72,0,1); }
+  #shutter{ transition:transform .13s cubic-bezier(.34,1.56,.64,1); } #shutter:active{ transform:scale(.86); }
+  .iconBtn, .roundDark, .galBtn, .zoomPill{ transition:transform .15s ease; }
+  .iconBtn:active, .roundDark:active, .galBtn:active{ transform:scale(.88); }
+  input.fld, select.fld{ transition:border-color .2s ease, box-shadow .2s ease; }
+  .setStat.low{ background:#f8e7c9; color:#8a5a17; }
+  .folder{ transition:transform .13s ease, box-shadow .25s ease; }
 </style>
 </head>
 <body>
@@ -504,6 +536,7 @@
   </main>
 
   <nav id="tabbar" class="dark">
+    <div id="navPill"></div>
     <button data-go="camScreen" class="sel" title="Camera">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="24" r="6.5"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4.2 4.2M32.8 32.8L37 37M37 11l-4.2 4.2M15.2 32.8L11 37"/></svg>
     </button>
@@ -648,6 +681,32 @@
       </div>
     </div>
 
+    <div id="viewSetup" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Secure your account</div>
+        <p class="otpSub">Two quick safety nets — so you never lose your account or your stamps. Takes less than a minute.</p>
+        <div class="fLab">Security question</div>
+        <select class="fld" id="suSqSel">
+          <option>What was the name of your first school?</option>
+          <option>What is your mother's first name?</option>
+          <option>In which city were you born?</option>
+          <option>What was the name of your first pet?</option>
+          <option>What is your favourite movie?</option>
+          <option>What was your childhood nickname?</option>
+        </select>
+        <input class="fld" id="suSqAns" type="text" placeholder="Your answer" style="margin-top:10px">
+        <button class="authBtn" id="suSqSave" style="background:#ece5d3;color:var(--ink)">Save question</button>
+        <div class="authMsg" id="suSqStat"></div>
+        <div class="fLab" style="margin-top:18px">Backup codes</div>
+        <p class="otpSub" style="margin:2px 0 0">Generate codes and save them somewhere safe — each one can rescue your account once.</p>
+        <div class="codeGrid" id="suBkGrid" style="display:none"></div>
+        <button class="authBtn" id="suBkGen" style="background:#ece5d3;color:var(--ink)">Generate backup codes</button>
+        <button class="authBtn" id="suDoneBtn">Done — enter app →</button>
+        <div class="linkRow" style="text-align:center;margin-top:12px"><a id="suSkip">Skip for now — do it later in Settings</a></div>
+        <div class="authErr" id="suErr"></div>
+      </div>
+    </div>
+
     <div class="authNote">Protected by email OTP verification.<br>Passwords are stored securely hashed — never in plain text.</div>
   </div>
 
@@ -706,7 +765,7 @@ function syncStamp(rec){ if(session && rec.cloud) api('saveStamp', { token: sess
 let otpCtx = { mode:'signup', email:'' };
 let resendTimerInt = null;
 function authView(v){
-  ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp','viewBackupLogin','viewResetBackup','viewResetQuestion'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+  ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp','viewBackupLogin','viewResetBackup','viewResetQuestion','viewSetup'].forEach(id=>{ document.getElementById(id).style.display='none'; });
   document.getElementById('view'+v[0].toUpperCase()+v.slice(1)).style.display='block';
   $('#authScreen').classList.toggle('otpMode', v==='otp');
 }
@@ -744,6 +803,24 @@ $('#rqFetchBtn').onclick=async(e)=>{
   if(r.ok){ $('#rqText').textContent=r.question; $('#rqBlock').style.display='block'; $('#rqErr').textContent=''; }
   else $('#rqErr').textContent=r.error;
 };
+$('#suSqSave').onclick=async(e)=>{
+  setBusy(e.target, true, 'Saving…');
+  const r=await api('setSecurityQuestion', { token: session.token, question: $('#suSqSel').value, answer: $('#suSqAns').value, currentPassword: $('#suPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ $('#suSqStat').textContent='✓ Security question saved'; $('#suErr').textContent=''; }
+  else $('#suErr').textContent=r.error;
+};
+$('#suBkGen').onclick=async(e)=>{
+  setBusy(e.target, true, 'Generating…');
+  const r=await api('generateBackupCodes', { token: session.token });
+  setBusy(e.target, false);
+  if(r.ok){ const g=$('#suBkGrid'); g.style.display='grid';
+    g.innerHTML=r.codes.map(c=>`<div class="codeChip">${c}</div>`).join('');
+    e.target.textContent='Regenerate codes'; toast('Save these codes somewhere safe 📋'); }
+  else $('#suErr').textContent=r.error;
+};
+$('#suDoneBtn').onclick=()=>enterApp();
+$('#suSkip').onclick=()=>enterApp();
 $('#rqBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Saving…');
   const r=await api('resetWithAnswer', { email:$('#rqEmail').value.trim(), answer:$('#rqAnswer').value, newPassword:$('#rqPass').value });
@@ -811,7 +888,7 @@ $('#verifyBtn').onclick=async(e)=>{
     const r=await api('register', { name:$('#suName').value, email: otpCtx.email, password:$('#suPass').value, code });
     setBusy(e.target, false);
     if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
-      toast('Welcome, '+r.user.name+'! 🎉'); enterApp(); }
+      toast('Welcome, '+r.user.name+'! 🎉'); authView('setup'); }
     else $('#otpErr').textContent=r.error;
   } else {
     setBusy(e.target, false); authView('newPass');
@@ -849,6 +926,7 @@ $('#rsBtn').onclick=async(e)=>{
 async function enterApp(){
   $('#authScreen').style.display='none';
   if(!session) return;
+  requestAnimationFrame(()=>setNav(curNav));
   $('#avatarBtn').textContent=(session.user.name||'S').trim()[0].toUpperCase();
   const r=await api('listStamps', { token: session.token });
   if(r.ok){
@@ -861,6 +939,15 @@ async function enterApp(){
     localOnly.forEach(s=>{ if(s.cloud) syncStamp(s); else uploadToCloud(s); });
     api('setCollections', { token: session.token, colls });
   }
+  /* backup codes khatam hone ko hon to user ko batao */
+  api('backupStatus', { token: session.token }).then(r=>{
+    if(r.ok && r.total>0 && r.remaining<=2 && !window._bkWarned){
+      window._bkWarned=1;
+      setTimeout(()=>toast(r.remaining
+        ? '⚠️ Only '+r.remaining+' backup code'+(r.remaining>1?'s':'')+' left — generate new ones in Settings'
+        : '⚠️ Your backup codes are finished — generate new ones in Settings'), 1400);
+    }
+  }).catch(()=>{});
 }
 $('#logoutBtn').onclick=()=>{
   session=null; localStorage.removeItem('snapmark_session');
@@ -1239,6 +1326,7 @@ async function loadSettings(){
   const r=await api('backupStatus', { token: session.token });
   if(r.ok){
     $('#bkStat').textContent= r.total ? (r.remaining+' of '+r.total+' backup codes unused') : 'No backup codes yet';
+    $('#bkStat').classList.toggle('low', r.total>0 && r.remaining<=2);
     if(r.hasQuestion){ $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Set: '+r.question;
       const sel=$('#sqSel'); [...sel.options].forEach(o=>{ if(o.text===r.question) sel.value=o.value||o.text; }); sel.value=r.question; }
     else { $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Not set yet'; }
@@ -1286,7 +1374,20 @@ function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.class
   if(id==='letterScreen') renderLetters();
   if(id==='settingsScreen') loadSettings();
 }
-function setNav(i){ document.querySelectorAll('#tabbar button').forEach((b,j)=>b.classList.toggle('sel', j===i)); }
+let curNav=0;
+function setNav(i){
+  curNav=i;
+  const btns=[...document.querySelectorAll('#tabbar button')];
+  btns.forEach((b,j)=>b.classList.toggle('sel', j===i));
+  const pill=$('#navPill'); if(!pill) return;
+  if(i<0 || !btns[i]){ pill.style.opacity='0'; return; }
+  const b=btns[i];
+  pill.style.opacity='1';
+  pill.style.left=(b.offsetLeft + b.offsetWidth/2)+'px';
+  pill.style.width=b.offsetWidth+'px';
+  b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+}
+window.addEventListener('resize', ()=>setNav(curNav));
 document.querySelectorAll('#tabbar button').forEach((b,i)=>{ b.onclick=()=>{ showScreen(b.dataset.go); }; });
 fillCollSelects(); renderFolders();
 /* login hai to app me ghuso, warna auth screen rahegi */
