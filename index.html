@@ -1089,9 +1089,18 @@ function scallop(x,W,H){
   x.globalCompositeOperation='source-over';
 }
 function makeStamp(el, isVideo, style){
-  const W=620, B= style==='template'?60:44, pW=W-B*2, pH=Math.round(pW*(cutterIdx===1?1.0:cutterIdx===2?0.74:1.14));
+  const W=620;
+  if(style==='none'){
+    /* FULL-BLEED (video jaisa): photo pure stamp me kinare tak, koi white border nahi — perforation seedha photo ko kaat-ti hai */
+    const pW0=W-88, pH0=Math.round(pW0*(cutterIdx===1?1.0:cutterIdx===2?0.74:1.14));
+    const c=document.createElement('canvas'); c.width=W; c.height=pH0+88; const x=c.getContext('2d');
+    cropDraw(x, el, isVideo, 0, 0, W, c.height, zoom);
+    scallop(x,W,c.height);
+    return c.toDataURL('image/png');
+  }
+  const B=60, pW=W-B*2, pH=Math.round(pW*(cutterIdx===1?1.0:cutterIdx===2?0.74:1.14));
   const c=document.createElement('canvas'); c.width=W; c.height=pH+B*2; const x=c.getContext('2d');
-  x.fillStyle= style==='template' ? '#fdf6e3':'#ffffff'; rr(x,3,3,W-6,c.height-6,8); x.fill();
+  x.fillStyle='#fdf6e3'; rr(x,3,3,W-6,c.height-6,8); x.fill();
   cropDraw(x, el, isVideo, B, B, pW, pH, zoom);
   if(style==='template'){
     x.strokeStyle='#b3372a'; x.lineWidth=5; rr(x,B-11,B-11,pW+22,pH+22,5); x.stroke();
