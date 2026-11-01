@@ -16,8 +16,8 @@
     box-shadow:0 0 60px rgba(0,0,0,.5); display:flex; flex-direction:column; }
   main{ flex:1; position:relative; overflow:hidden; }
   .screen{ position:absolute; inset:0; display:none; flex-direction:column; background:var(--paper); }
-  .screen.on{ display:flex; animation:scrIn .25s ease; }
-  @keyframes scrIn{ from{ opacity:0; transform:translateX(18px);} to{ opacity:1; transform:none;} }
+  .screen.on{ display:flex; animation:scrIn .32s cubic-bezier(.25,.8,.3,1); }
+  @keyframes scrIn{ from{ opacity:0; transform:translateX(46px);} to{ opacity:1; transform:none;} }
   .scroll{ overflow-y:auto; flex:1; }
 
   /* ============ CAMERA (full bleed) ============ */
@@ -64,8 +64,11 @@
     background-repeat:repeat-x, repeat-x, repeat-y, repeat-y; }
   #filmLogo{ text-align:center; color:#8f8f96; font-size:10px; letter-spacing:3px; font-weight:800; margin-top:8px; }
   #ejectImg{ position:absolute; left:50%; top:2px; width:80%; z-index:7; display:none; filter:drop-shadow(0 16px 22px rgba(0,0,0,.5)); }
-  #ejectImg.go{ display:block; animation:eject .85s cubic-bezier(.3,.7,.3,1) forwards; }
-  @keyframes eject{ 0%{ transform:translate(-50%,30%) rotate(0); opacity:.3; } 30%{ opacity:1; } 100%{ transform:translate(-60%,-92%) rotate(-8deg); opacity:1; } }
+  #ejectImg.go{ display:block; animation:eject 1s cubic-bezier(.3,1.35,.4,1) forwards; }
+  @keyframes eject{ 0%{ transform:translate(-50%,34%) rotate(0) scale(.94); opacity:.2; }
+    35%{ opacity:1; transform:translate(-55%,-58%) rotate(-6deg) scale(1.03); }
+    68%{ transform:translate(-61%,-99%) rotate(-10deg) scale(1.05); }
+    100%{ transform:translate(-62%,-93%) rotate(-9deg) scale(1.04); opacity:1; } }
   #flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:8; }
   .camBottom{ position:absolute; left:0; right:0; bottom:96px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:12px; }
   .segPill{ display:flex; background:rgba(20,18,12,.55); backdrop-filter:blur(6px); border-radius:999px; padding:3px; border:1.5px solid rgba(255,255,255,.2); }
@@ -154,7 +157,7 @@
   #sheetWrap{ position:absolute; inset:0; background:rgba(24,22,16,.45); display:none; z-index:25; }
   #sheetWrap.on{ display:block; }
   #sheet{ position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:24px 24px 0 0; padding:12px 20px 30px; animation:sheetUp .3s cubic-bezier(.3,1.1,.4,1); max-height:70%; overflow-y:auto; }
-  @keyframes sheetUp{ from{ transform:translateY(60%); } }
+  @keyframes sheetUp{ from{ transform:translateY(100%); } }
   #sheet .grab{ width:42px; height:5px; border-radius:99px; background:#ddd6c6; margin:0 auto 12px; }
   #sheet .sHead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   #sheet .sHead .t{ font-weight:800; font-size:15.5px; }
@@ -286,6 +289,36 @@
   #acctSheet{ position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:24px 24px 0 0; padding:14px 22px 30px; animation:sheetUp .3s cubic-bezier(.3,1.1,.4,1); }
   #acctSheet .an{ font-family:'Playfair Display',serif; font-size:24px; font-weight:600; }
   #acctSheet .ae{ color:#7a7263; font-weight:700; font-size:13.5px; margin-bottom:6px; }
+  /* ---------- v10: press feedback, folders, manage, modal, settings ---------- */
+  .bigBtn:active, .authBtn:active, .folder:active, .revCard:active, #fab:active, .iconBtn:active, .managePill:active{ transform:scale(.965); }
+  .bigBtn, .authBtn, .folder, #fab, .managePill{ transition:transform .12s ease; }
+  .folder{ animation:popIn .34s backwards; }
+  #manageBar{ display:none; align-items:center; gap:8px; padding:8px 14px; background:#fffdf4; border-bottom:1.5px solid var(--line); flex-wrap:wrap; }
+  #manageBar.on{ display:flex; }
+  #manageBar .cnt{ font-weight:800; font-size:13.5px; }
+  #manageBar button{ border:1.5px solid var(--line); background:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:13px; cursor:pointer; font-family:'Inter'; }
+  #manageBar button.danger{ background:#b3372a; color:#fff; border-color:#b3372a; }
+  #manageBar select{ border:1.5px solid var(--line); border-radius:999px; padding:7px 9px; font-family:'Inter'; font-size:13px; background:#fff; }
+  #stampGrid img.picked{ outline:4px solid #c96f2e; outline-offset:-4px; filter:brightness(.92); }
+  #modalWrap{ position:absolute; inset:0; background:rgba(24,22,16,.5); display:none; z-index:60; align-items:flex-end; justify-content:center; }
+  #modalWrap.on{ display:flex; }
+  .modalCard{ background:var(--paper); width:100%; max-height:86%; overflow-y:auto; border-radius:26px 26px 0 0; padding:14px 22px 30px; animation:sheetUp .32s cubic-bezier(.3,1.15,.4,1); }
+  .modalCard h3{ font-family:'Playfair Display',serif; font-size:23px; margin:4px 0 14px; }
+  .modalCard .fld{ margin-bottom:12px; }
+  .pickGrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px; }
+  .pickGrid img{ width:100%; cursor:pointer; border-radius:6px; filter:drop-shadow(0 4px 8px rgba(35,33,28,.2)); }
+  .pickGrid img.picked{ outline:4px solid #c96f2e; outline-offset:-2px; }
+  /* settings — same stamp vibe as the auth cards */
+  .setCard{ position:relative; background:#fff; border-radius:10px; padding:20px 18px 16px; margin:0 0 18px; box-shadow:0 12px 26px rgba(35,33,28,.12); }
+  .setCard::before{ content:''; position:absolute; inset:0; border-radius:10px; pointer-events:none;
+    background-image:radial-gradient(circle at 6px 6px, var(--paper) 5.5px, transparent 6.5px),radial-gradient(circle at 6px 6px, var(--paper) 5.5px, transparent 6.5px),radial-gradient(circle at 6px 6px, var(--paper) 5.5px, transparent 6.5px),radial-gradient(circle at 6px 6px, var(--paper) 5.5px, transparent 6.5px);
+    background-size:19px 12px,19px 12px,12px 19px,12px 19px; background-position:0 0,0 100%,0 0,100% 0; background-repeat:repeat-x,repeat-x,repeat-y,repeat-y; }
+  .setCard h3{ font-family:'Playfair Display',serif; font-size:20px; margin:2px 0 4px; }
+  .setCard .sub{ color:#7a7263; font-size:13px; margin-bottom:12px; line-height:1.45; }
+  .setCard select.fld{ appearance:none; }
+  .codeGrid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:12px 0 4px; }
+  .codeChip{ font-family:'Inter'; font-weight:800; letter-spacing:1.2px; font-size:15px; text-align:center; background:#fbf9f3; border:1.5px dashed #cfc7ae; border-radius:10px; padding:10px 4px; }
+  .setStat{ display:inline-block; background:#eef0e2; color:#4c6440; font-weight:700; font-size:12.5px; border-radius:999px; padding:5px 11px; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -348,6 +381,10 @@
     <!-- STAMPS GRID -->
     <section class="screen" id="gridScreen">
       <div class="subHead"><button class="backBtn" id="gridBack">‹</button><div class="t" id="gridTitle">All Stamps</div><button class="managePill" id="manageBtn">Manage</button></div>
+      <div id="manageBar"><span class="cnt" id="manageCnt">0 selected</span>
+        <button id="mgMoveBtn">Move to</button><select id="mgMoveSel"></select>
+        <button id="mgDelBtn" class="danger">Delete</button>
+        <button id="mgDoneBtn">Done</button></div>
       <div class="scroll"><div id="stampGrid"></div><div class="emptyNote" id="gridEmpty" style="display:none"><span class="big">nothing here yet</span>No stamps in this collection yet.</div></div>
     </section>
 
@@ -389,6 +426,60 @@
       </div></div>
     </section>
 
+    <!-- SETTINGS -->
+    <section class="screen" id="settingsScreen">
+      <div class="subHead"><button class="backBtn" id="setBack">‹</button><div class="t">Settings</div><div style="width:40px"></div></div>
+      <div class="scroll"><div class="page" style="padding-top:6px">
+        <div class="setCard">
+          <h3>Account</h3>
+          <div class="sub" style="margin-bottom:2px"><b id="setName">User</b><br><span id="setEmail">email</span></div>
+        </div>
+        <div class="setCard">
+          <h3>Backup codes</h3>
+          <div class="sub">Lost your email access? A backup code can log you in or reset your password. Each code works only once — save them somewhere safe, like a screenshot or a note.</div>
+          <div class="setStat" id="bkStat">Checking…</div>
+          <div class="codeGrid" id="bkGrid" style="display:none"></div>
+          <button class="bigBtn" id="bkGenBtn">Generate new codes</button>
+          <div class="authErr" id="bkErr"></div>
+        </div>
+        <div class="setCard">
+          <h3>Security question</h3>
+          <div class="sub">Answer this to reset your password if email is not available. Pick something only you know.</div>
+          <div class="setStat" id="sqStat" style="display:none"></div>
+          <div class="fLab">Question</div>
+          <select class="fld" id="sqSel">
+            <option>What was the name of your first school?</option>
+            <option>What is your mother's first name?</option>
+            <option>In which city were you born?</option>
+            <option>What was the name of your first pet?</option>
+            <option>What is your favourite movie?</option>
+            <option>What was your childhood nickname?</option>
+          </select>
+          <div class="fLab">Your answer</div>
+          <input class="fld" id="sqAnswer" type="text" placeholder="Your answer">
+          <div class="fLab">Current password</div>
+          <input class="fld" id="sqPass" type="password" placeholder="Confirm it is you">
+          <button class="bigBtn" id="sqSaveBtn">Save security question</button>
+          <div class="authErr" id="sqErr"></div>
+        </div>
+        <div class="setCard">
+          <h3>Change password</h3>
+          <div class="fLab">Current password</div>
+          <input class="fld" id="cpCur" type="password" placeholder="Current password">
+          <div class="fLab">New password</div>
+          <input class="fld" id="cpNew" type="password" placeholder="At least 6 characters">
+          <button class="bigBtn" id="cpBtn">Change password</button>
+          <div class="authErr" id="cpErr"></div>
+        </div>
+        <div class="setCard">
+          <h3>About</h3>
+          <div class="sub" style="margin-bottom:2px">Snapmark — turn your photos into collectible stamps.<br>Version 1.0 · Made with ♥</div>
+        </div>
+        <button class="bigBtn" id="setLogoutBtn" style="background:#b3372a">Logout</button>
+        <div style="height:26px"></div>
+      </div></div>
+    </section>
+
     <!-- day sheet -->
     <div id="sheetWrap"><div id="sheet">
       <div class="grab"></div>
@@ -401,6 +492,14 @@
       <img id="viewerImg" alt="Stamp">
       <div class="vbtns"><button id="dlBtn">⬇ Save image</button><button id="delBtn">Delete</button><button id="closeViewer">Close</button></div>
     </div>
+    <!-- in-app modal (replaces browser prompt) -->
+    <div id="modalWrap"><div class="modalCard">
+      <div class="grab" style="width:42px;height:5px;border-radius:99px;background:#ddd6c6;margin:0 auto 12px"></div>
+      <h3 id="modalTitle">Title</h3>
+      <div id="modalBody"></div>
+      <button class="bigBtn" id="modalOk">OK</button>
+      <button class="bigBtn" id="modalCancel" style="background:#ece5d3;color:var(--ink)">Cancel</button>
+    </div></div>
     <div id="toast"></div>
   </main>
 
@@ -437,6 +536,7 @@
         <div class="fWrap"><input class="fld" id="liPass" type="password" placeholder="Your password" autocomplete="current-password"><button class="eyeBtn" data-eye="liPass" type="button">👁</button></div>
         <div class="linkRow"><a id="forgotLink">Forgot password?</a></div>
         <button class="authBtn" id="loginBtn">Log in</button>
+        <div class="linkRow" style="text-align:center;margin-top:12px"><a id="backupLoginLink">Log in with a backup code</a></div>
         <div class="authErr" id="loginErr"></div>
       </div>
     </div>
@@ -465,7 +565,7 @@
         <div class="fLab">Your email</div>
         <input class="fld" id="rsEmail" type="email" placeholder="you@example.com" autocomplete="email">
         <button class="authBtn" id="rsSendBtn">Send reset code</button>
-        <div class="linkRow left"><a id="backLogin">← Back to login</a></div>
+        <div class="linkRow left" style="line-height:2"><a id="rsBackupLink">Use a backup code instead</a><br><a id="rsQuestionLink">Answer your security question</a><br><a id="backLogin">← Back to login</a></div>
         <div class="authErr" id="resetErr"></div>
       </div>
     </div>
@@ -497,6 +597,57 @@
       <div class="resendRow">Didn't get it? <a id="resendLink" class="off">Resend code</a> <span id="resendTimer">(0:60)</span></div>
     </div>
 
+    <div id="viewBackupLogin" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Backup code login</div>
+        <p class="otpSub">Enter your email and one of your saved backup codes. Each code works only once.</p>
+        <div class="fLab">Email</div>
+        <input class="fld" id="bkEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <div class="fLab">Backup code</div>
+        <input class="fld" id="bkCode" type="text" placeholder="e.g. 3BTT-U277" autocomplete="off" style="text-transform:uppercase;letter-spacing:1.5px">
+        <button class="authBtn" id="bkLoginBtn">Log in with code</button>
+        <div class="linkRow left"><a id="bkBack">← Back to login</a></div>
+        <div class="authErr" id="bkLoginErr"></div>
+      </div>
+    </div>
+
+    <div id="viewResetBackup" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Reset with backup code</div>
+        <p class="otpSub">Your backup code proves it is you — set a new password right away.</p>
+        <div class="fLab">Email</div>
+        <input class="fld" id="rbEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <div class="fLab">Backup code</div>
+        <input class="fld" id="rbCode" type="text" placeholder="e.g. 3BTT-U277" autocomplete="off" style="text-transform:uppercase;letter-spacing:1.5px">
+        <div class="fLab">New password</div>
+        <input class="fld" id="rbPass" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+        <button class="authBtn" id="rbBtn">Set new password</button>
+        <div class="linkRow left"><a id="rbBack">← Back</a></div>
+        <div class="authErr" id="rbErr"></div>
+      </div>
+    </div>
+
+    <div id="viewResetQuestion" style="display:none">
+      <div class="stampCard">
+        <div class="otpHead" style="font-size:25px">Security question</div>
+        <p class="otpSub">Answer the question you set in Settings to reset your password.</p>
+        <div class="fLab">Email</div>
+        <input class="fld" id="rqEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <button class="authBtn" id="rqFetchBtn" style="background:#ece5d3;color:var(--ink)">Show my question</button>
+        <div id="rqBlock" style="display:none">
+          <div class="fLab">Your question</div>
+          <div class="otpSub" id="rqText" style="font-weight:700;color:var(--ink)"></div>
+          <div class="fLab">Your answer</div>
+          <input class="fld" id="rqAnswer" type="text" placeholder="Your answer">
+          <div class="fLab">New password</div>
+          <input class="fld" id="rqPass" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+          <button class="authBtn" id="rqBtn">Set new password</button>
+        </div>
+        <div class="linkRow left"><a id="rqBack">← Back</a></div>
+        <div class="authErr" id="rqErr"></div>
+      </div>
+    </div>
+
     <div class="authNote">Protected by email OTP verification.<br>Passwords are stored securely hashed — never in plain text.</div>
   </div>
 
@@ -505,6 +656,7 @@
     <div class="grab" style="width:42px;height:5px;border-radius:99px;background:#ddd6c6;margin:0 auto 14px"></div>
     <div class="an" id="acctName">User</div>
     <div class="ae" id="acctEmail">email</div>
+    <button class="bigBtn" id="settingsBtn" style="background:#23211c">⚙ Settings</button>
     <button class="bigBtn" id="logoutBtn" style="background:#b3372a">Logout</button>
     <button class="bigBtn" id="acctClose" style="background:#ece5d3;color:var(--ink)">Close</button>
   </div></div>
@@ -554,7 +706,7 @@ function syncStamp(rec){ if(session && rec.cloud) api('saveStamp', { token: sess
 let otpCtx = { mode:'signup', email:'' };
 let resendTimerInt = null;
 function authView(v){
-  ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+  ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp','viewBackupLogin','viewResetBackup','viewResetQuestion'].forEach(id=>{ document.getElementById(id).style.display='none'; });
   document.getElementById('view'+v[0].toUpperCase()+v.slice(1)).style.display='block';
   $('#authScreen').classList.toggle('otpMode', v==='otp');
 }
@@ -563,6 +715,43 @@ $('#tabSignup').onclick=()=>authView('signup');
 $('#tabLogin2').onclick=()=>authView('login');
 $('#tabSignup2').onclick=()=>authView('signup');
 $('#forgotLink').onclick=()=>{ $('#rsEmail').value=$('#liEmail').value; authView('resetEmail'); };
+$('#backupLoginLink').onclick=()=>{ $('#bkEmail').value=$('#liEmail').value; authView('backupLogin'); };
+$('#bkBack').onclick=()=>authView('login');
+$('#rsBackupLink').onclick=()=>{ $('#rbEmail').value=$('#rsEmail').value; authView('resetBackup'); };
+$('#rsQuestionLink').onclick=()=>{ $('#rqEmail').value=$('#rsEmail').value; authView('resetQuestion'); };
+$('#rbBack').onclick=()=>authView('resetEmail');
+$('#rqBack').onclick=()=>authView('resetEmail');
+$('#bkLoginBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Checking code…');
+  const r=await api('loginWithBackupCode', { email:$('#bkEmail').value, code:$('#bkCode').value });
+  setBusy(e.target, false);
+  if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+    toast('Welcome back, '+r.user.name+'! (backup code used)'); enterApp(); }
+  else $('#bkLoginErr').textContent=r.error;
+};
+$('#rbBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Saving…');
+  const r=await api('resetWithBackupCode', { email:$('#rbEmail').value, code:$('#rbCode').value, newPassword:$('#rbPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ authView('login'); $('#liEmail').value=$('#rbEmail').value.trim();
+    setTimeout(()=>toast('✓ Password changed — log in with your new password'), 60); }
+  else $('#rbErr').textContent=r.error;
+};
+$('#rqFetchBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Finding…');
+  const r=await api('securityQuestion', { email:$('#rqEmail').value.trim() });
+  setBusy(e.target, false);
+  if(r.ok){ $('#rqText').textContent=r.question; $('#rqBlock').style.display='block'; $('#rqErr').textContent=''; }
+  else $('#rqErr').textContent=r.error;
+};
+$('#rqBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Saving…');
+  const r=await api('resetWithAnswer', { email:$('#rqEmail').value.trim(), answer:$('#rqAnswer').value, newPassword:$('#rqPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ authView('login'); $('#liEmail').value=$('#rqEmail').value.trim();
+    setTimeout(()=>toast('✓ Password changed — log in with your new password'), 60); }
+  else $('#rqErr').textContent=r.error;
+};
 $('#backLogin').onclick=()=>authView('login');
 $('#otpBack').onclick=()=>authView(otpCtx.mode==='signup' ? 'signup' : 'resetEmail');
 document.querySelectorAll('.eyeBtn').forEach(b=>{ b.onclick=()=>{ const f=document.getElementById(b.dataset.eye); f.type = f.type==='password' ? 'text':'password'; }; });
@@ -801,7 +990,7 @@ $('#shutter').onclick=()=>{
       fillCollSelects();
       showScreen('reviewScreen');
       const w=$('#revStampWrap'); w.classList.remove('pop'); void w.offsetWidth; w.classList.add('pop');
-    }, 820);
+    }, 1000);
   }, 200);
 };
 document.querySelectorAll('.revCard').forEach(cd=>{
@@ -831,8 +1020,9 @@ $('#collPill').onchange=e=>{ activeColl=e.target.value; fillCollSelects(); toast
 function collCount(name){ return name==='__all' ? stamps.length : stamps.filter(s=>s.coll===name).length; }
 function renderFolders(){
   const list=$('#folderList'); list.innerHTML='';
+  let fi=0;
   const mk=(name, title, bg, imgs)=>{
-    const d=document.createElement('div'); d.className='folder'; d.style.background=bg;
+    const d=document.createElement('div'); d.className='folder'; d.style.background=bg; d.style.animationDelay=(fi++*0.06)+'s';
     d.innerHTML=`<h3>${title}</h3><p>${collCount(name)} stamps</p>`+
       (imgs? `<div class="fimgs">${imgs.map(i=>`<img src="${i}">`).join('')}</div>`:'');
     d.onclick=()=>openGrid(name); list.appendChild(d);
@@ -840,9 +1030,9 @@ function renderFolders(){
   mk('__all','All Stamps','linear-gradient(100deg,#e8e2d2,#dfe5da)', stamps.slice(0,3).map(s=>s.img));
   colls.forEach((c,i)=>mk(c, c, PALETTE[i%PALETTE.length], null));
 }
-$('#fab').onclick=()=>{
-  const name=prompt('Name your new collection (e.g. Goa Trip, New York, Family)');
-  if(name && name.trim()){ colls.push(name.trim()); activeColl=name.trim(); saveAll(); fillCollSelects(); renderFolders();
+$('#fab').onclick=async()=>{
+  const name=await askText('New collection', 'Collection name', 'e.g. Goa Trip, New York, Family', 'Create');
+  if(name){ colls.push(name); activeColl=name; saveAll(); fillCollSelects(); renderFolders();
     if(session) api('setCollections', { token: session.token, colls });
     toast('Collection created: '+activeColl); }
 };
@@ -852,11 +1042,11 @@ function openGrid(name){
   const g=$('#stampGrid'); g.innerHTML='';
   $('#gridEmpty').style.display= list.length? 'none':'block';
   list.forEach((s,i)=>{ const im=new Image(); im.src=s.img; im.style.animationDelay=(i*0.04)+'s';
-    im.onclick=()=>{ viewingId=s.id; $('#viewerImg').src=s.img; $('#viewer').classList.add('on'); }; g.appendChild(im); });
+    im.onclick=()=>{ if(manageMode){ picked.has(s.id)?picked.delete(s.id):picked.add(s.id); im.classList.toggle('picked', picked.has(s.id)); updManageCnt(); return; }
+      viewingId=s.id; $('#viewerImg').src=s.img; $('#viewer').classList.add('on'); }; g.appendChild(im); });
   showScreen('gridScreen');
 }
 $('#gridBack').onclick=()=>{ showScreen('collScreen'); setNav(1); };
-$('#manageBtn').onclick=()=>toast('Manage mode — coming soon: multi-select delete and move');
 $('#closeViewer').onclick=()=>$('#viewer').classList.remove('on');
 $('#delBtn').onclick=()=>{ stamps=stamps.filter(s=>s.id!==viewingId); saveAll();
   if(session) api('deleteStamp', { token: session.token, id: viewingId });
@@ -920,9 +1110,9 @@ function renderProjects(){
     d.onclick=()=>openProject(p.id); g.appendChild(d);
   });
 }
-$('#newProjBtn').onclick=()=>{
-  const name=prompt('Name your project (e.g. A Lovely Day, Goa Diary)');
-  if(name && name.trim()){ projects.unshift({ id:Date.now(), name:name.trim(), pat:projects.length%PATTERNS.length, stampIds:[] });
+$('#newProjBtn').onclick=async()=>{
+  const name=await askText('New project', 'Project name', 'e.g. A Lovely Day, Goa Diary', 'Create');
+  if(name){ projects.unshift({ id:Date.now(), name, pat:projects.length%PATTERNS.length, stampIds:[] });
     saveAll(); renderProjects(); toast('Project created 📖'); }
 };
 function openProject(id){
@@ -941,11 +1131,17 @@ function openProject(id){
   showScreen('projScreen');
 }
 $('#projBack').onclick=()=>{ showScreen('bookScreen'); setNav(3); renderProjects(); };
-$('#projAddBtn').onclick=()=>{
+$('#projAddBtn').onclick=async()=>{
   if(!curProj) return;
   const avail=stamps.filter(s=>!curProj.stampIds.includes(s.id));
   if(!avail.length){ toast('No new stamps — make some stamps first'); return; }
-  const s=avail[0]; curProj.stampIds.push(s.id); saveAll(); openProject(curProj.id); toast('Stamp placed — tap again to add more');
+  const chosen=new Set();
+  const html=`<div class="pickGrid">${avail.map(s=>`<img src="${s.img}" data-pick="${s.id}">`).join('')}</div><p class="otpSub">Tap stamps to pick them, then press Add.</p>`;
+  const p=openModal('Add stamps to "'+curProj.name+'"', html, 'Add selected');
+  document.querySelectorAll('[data-pick]').forEach(im=>{ im.onclick=()=>{ const id=+im.dataset.pick;
+    chosen.has(id)?chosen.delete(id):chosen.add(id); im.classList.toggle('picked', chosen.has(id)); }; });
+  const r=await p;
+  if(r && chosen.size){ curProj.stampIds.push(...chosen); saveAll(); openProject(curProj.id); toast(chosen.size+' stamp'+(chosen.size>1?'s':'')+' placed 📖'); }
 };
 
 /* ---------- letters ---------- */
@@ -954,14 +1150,8 @@ function renderLetters(){
   $('#tabRecv').classList.toggle('sel', letterTab==='recv');
   $('#tabSent').classList.toggle('sel', letterTab==='sent');
   if(!letters.handle){
-    body.innerHTML=`<div class="emptyNote" style="padding-top:80px">
-      <svg viewBox="0 0 48 48" width="64" height="64" fill="none" stroke="#a49d88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="38" height="27" rx="3"/><path d="M6 13l18 14L42 13"/></svg>
-      <span class="big" style="margin-top:14px;font-size:22px">Sign in to open letters</span>
-      Send and receive handwritten letters with friends<br>by @handle.
-      <button class="bigBtn" id="signInBtn">Sign in — create your @handle</button></div>`;
-    $('#signInBtn').onclick=()=>{ const h=prompt('Choose your @handle (e.g. @tirth)');
-      if(h && h.trim()){ letters.handle=h.trim().startsWith('@')?h.trim():'@'+h.trim(); saveAll(); renderLetters(); toast('Welcome, '+letters.handle+' ✉️'); } };
-    return;
+    letters.handle = session ? '@'+(session.user.name||'me').trim().toLowerCase().replace(/\s+/g,'') : '@me';
+    saveAll();
   }
   if(letterTab==='recv'){
     body.innerHTML=`<div class="emptyNote" style="padding-top:60px"><span class="big">no letters yet</span>
@@ -979,21 +1169,113 @@ function renderLetters(){
   body.innerHTML=html;
   $('#writeBtn').onclick=composeLetter;
 }
-function composeLetter(){
+async function composeLetter(){
   if(!stamps.length){ toast('Make a stamp first, then write a letter'); return; }
-  const to=prompt('Who is this letter for? (@handle)');
-  if(!to) return;
-  const msg=prompt('Write your handwritten message:');
-  if(!msg) return;
-  letters.sent.push({ to: to.startsWith('@')?to:'@'+to, msg, stampId: stamps[0].id,
+  const r=await openModal('Write a letter',
+    `<div class="fLab">To (@handle)</div><input class="fld" data-k="to" placeholder="@friend">
+     <div class="fLab">Your message</div><input class="fld" data-k="msg" placeholder="Write something nice…">`, 'Send letter');
+  if(!r || !r.to.trim() || !r.msg.trim()) return;
+  letters.sent.push({ to: r.to.trim().startsWith('@')?r.to.trim():'@'+r.to.trim(), msg: r.msg.trim(), stampId: stamps[0].id,
     date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) });
   saveAll(); renderLetters(); toast('Letter sent ✉️ (saved on this device)');
 }
 $('#tabRecv').onclick=()=>{ letterTab='recv'; renderLetters(); };
 $('#tabSent').onclick=()=>{ letterTab='sent'; renderLetters(); };
 
+/* ---------- in-app modal (replaces browser prompt) ---------- */
+let modalResolve=null;
+function openModal(title, bodyHTML, okText){
+  $('#modalTitle').textContent=title;
+  $('#modalBody').innerHTML=bodyHTML;
+  $('#modalOk').textContent=okText||'OK';
+  $('#modalWrap').classList.add('on');
+  return new Promise(res=>{ modalResolve=res; });
+}
+function closeModal(val){ $('#modalWrap').classList.remove('on'); if(modalResolve){ modalResolve(val); modalResolve=null; } }
+$('#modalCancel').onclick=()=>closeModal(null);
+$('#modalWrap').onclick=e=>{ if(e.target.id==='modalWrap') closeModal(null); };
+$('#modalOk').onclick=()=>{
+  const vals={};
+  document.querySelectorAll('#modalBody [data-k]').forEach(el=>{ vals[el.dataset.k]=el.value; });
+  closeModal(vals);
+};
+async function askText(title, label, ph, okText){
+  const r=await openModal(title, `<div class="fLab">${label}</div><input class="fld" data-k="v" placeholder="${ph}">`, okText);
+  return r && r.v && r.v.trim() ? r.v.trim() : null;
+}
+
+/* ---------- manage mode (grid multi-select) ---------- */
+let manageMode=false; const picked=new Set();
+function setManage(on){
+  manageMode=on; picked.clear();
+  $('#manageBar').classList.toggle('on', on);
+  $('#manageBtn').textContent= on ? 'Managing…' : 'Manage';
+  document.querySelectorAll('#stampGrid img').forEach(im=>im.classList.remove('picked'));
+  updManageCnt();
+  if(on){ const sel=$('#mgMoveSel'); sel.innerHTML=colls.map(c=>`<option>${c}</option>`).join(''); }
+}
+function updManageCnt(){ $('#manageCnt').textContent=picked.size+' selected'; }
+$('#manageBtn').onclick=()=>setManage(!manageMode);
+$('#mgDoneBtn').onclick=()=>setManage(false);
+$('#mgDelBtn').onclick=()=>{
+  if(!picked.size){ toast('Select some stamps first'); return; }
+  const ids=[...picked];
+  stamps=stamps.filter(s=>!ids.includes(s.id)); saveAll();
+  if(session) ids.forEach(id=>api('deleteStamp', { token: session.token, id }));
+  setManage(false); openGrid(gridColl); toast('Deleted '+ids.length+' stamp'+(ids.length>1?'s':''));
+};
+$('#mgMoveBtn').onclick=()=>{
+  if(!picked.size){ toast('Select some stamps first'); return; }
+  const to=$('#mgMoveSel').value;
+  stamps.forEach(s=>{ if(picked.has(s.id)){ s.coll=to; syncStamp(s); } });
+  saveAll(); setManage(false); openGrid(gridColl); toast('Moved to "'+to+'"');
+};
+
+/* ---------- settings ---------- */
+async function loadSettings(){
+  if(!session) return;
+  $('#setName').textContent=session.user.name||'User';
+  $('#setEmail').textContent=session.user.email||'';
+  const r=await api('backupStatus', { token: session.token });
+  if(r.ok){
+    $('#bkStat').textContent= r.total ? (r.remaining+' of '+r.total+' backup codes unused') : 'No backup codes yet';
+    if(r.hasQuestion){ $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Set: '+r.question;
+      const sel=$('#sqSel'); [...sel.options].forEach(o=>{ if(o.text===r.question) sel.value=o.value||o.text; }); sel.value=r.question; }
+    else { $('#sqStat').style.display='inline-block'; $('#sqStat').textContent='Not set yet'; }
+  }
+}
+$('#settingsBtn').onclick=()=>{ $('#acctWrap').classList.remove('on'); showScreen('settingsScreen'); };
+$('#setBack').onclick=()=>{ showScreen('camScreen'); };
+$('#setLogoutBtn').onclick=()=>$('#logoutBtn').click();
+$('#bkGenBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Generating…');
+  const r=await api('generateBackupCodes', { token: session.token });
+  setBusy(e.target, false);
+  if(r.ok){
+    const g=$('#bkGrid'); g.style.display='grid';
+    g.innerHTML=r.codes.map(c=>`<div class="codeChip">${c}</div>`).join('');
+    $('#bkStat').textContent=r.codes.length+' new codes — old ones no longer work';
+    $('#bkErr').textContent='';
+    toast('Save these codes somewhere safe 📋');
+  } else $('#bkErr').textContent=r.error;
+};
+$('#sqSaveBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Saving…');
+  const r=await api('setSecurityQuestion', { token: session.token, question:$('#sqSel').value, answer:$('#sqAnswer').value, currentPassword:$('#sqPass').value });
+  setBusy(e.target, false);
+  if(r.ok){ $('#sqErr').textContent=''; $('#sqPass').value=''; loadSettings(); toast('Security question saved ✓'); }
+  else $('#sqErr').textContent=r.error;
+};
+$('#cpBtn').onclick=async(e)=>{
+  setBusy(e.target, true, 'Changing…');
+  const r=await api('changePassword', { token: session.token, currentPassword:$('#cpCur').value, newPassword:$('#cpNew').value });
+  setBusy(e.target, false);
+  if(r.ok){ $('#cpErr').textContent=''; $('#cpCur').value=''; $('#cpNew').value=''; toast('Password changed ✓'); }
+  else $('#cpErr').textContent=r.error;
+};
+
 /* ---------- nav ---------- */
-const NAVMAP={ camScreen:0, collScreen:1, gridScreen:1, calScreen:2, bookScreen:3, projScreen:3, letterScreen:4, reviewScreen:0 };
+const NAVMAP={ camScreen:0, collScreen:1, gridScreen:1, calScreen:2, bookScreen:3, projScreen:3, letterScreen:4, reviewScreen:0, settingsScreen:-1 };
 function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $('#'+id).classList.add('on');
   $('#tabbar').style.display = id==='reviewScreen' ? 'none':'flex';
   $('#tabbar').classList.toggle('dark', id==='camScreen'||id==='reviewScreen');
@@ -1002,6 +1284,7 @@ function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.class
   if(id==='calScreen') renderCalendar();
   if(id==='bookScreen') renderProjects();
   if(id==='letterScreen') renderLetters();
+  if(id==='settingsScreen') loadSettings();
 }
 function setNav(i){ document.querySelectorAll('#tabbar button').forEach((b,j)=>b.classList.toggle('sel', j===i)); }
 document.querySelectorAll('#tabbar button').forEach((b,i)=>{ b.onclick=()=>{ showScreen(b.dataset.go); }; });

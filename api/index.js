@@ -58,7 +58,46 @@ CREATE TABLE IF NOT EXISTS login_fails (
   email TEXT PRIMARY KEY,
   count INTEGER NOT NULL DEFAULT 0,
   window_start INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS backup_codes (
+  user_id INTEGER NOT NULL,
+  code_hash TEXT NOT NULL,
+  used_at INTEGER,
+  PRIMARY KEY (user_id, code_hash)
+);
+CREATE TABLE IF NOT EXISTS security_q (
+  user_id INTEGER PRIMARY KEY,
+  question TEXT NOT NULL,
+  answer_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS rec_fails (
+  email TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 0,
+  window_start INTEGER NOT NULL
 );`;
+
+/* ---------- recovery helpers (backup codes + security question) ---------- */
+const CODE_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function newBackupCode() {
+  let s = '';
+  for (let i = 0; i < 8; i++) s += CODE_ALPHA[crypto.randomInt(CODE_ALPHA.length)];
+  return s.slice(0, 4) + '-' + s.slice(4);
+}
+const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const normAnswer = a => String(a || '').trim().toLowerCase().replace(/\s+/g, ' ');
+async function recFailHit(email) {
+  const t = now();
+  const f = await one('SELECT * FROM rec_fails WHERE email=?', [email]);
+  const same = f && (t - Number(f.window_start) < 3600 * 1000);
+  await run(`INSERT INTO rec_fails (email, count, window_start) VALUES (?,?,?)
+    ON CONFLICT(email) DO UPDATE SET count=excluded.count, window_start=excluded.window_start`,
+    [email, same ? Number(f.count) + 1 : 1, same ? Number(f.window_start) : t]);
+}
+async function recFailCount(email) {
+  const f = await one('SELECT * FROM rec_fails WHERE email=?', [email]);
+  if (f && now() - Number(f.window_start) < 3600 * 1000) return Number(f.count);
+  return 0;
+}
 let schemaReady = null;
 function ensureSchema() {
   if (!schemaReady) schemaReady = db.executeMultiple(SCHEMA).catch(e => { schemaReady = null; throw e; });
@@ -287,6 +326,109 @@ const actions = {
     if (!data) return { ok: false, error: 'Login required' };
     await run('INSERT INTO user_data (user_id, colls) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET colls=excluded.colls',
       [data.uid, JSON.stringify(Array.isArray(colls) ? colls : ['My Collection'])]);
+    return { ok: true };
+  },
+
+  /* ----- backup codes + security question (Scribly-style recovery) ----- */
+  async backupStatus({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const rows = await allRows('SELECT used_at FROM backup_codes WHERE user_id=?', [data.uid]);
+    const sq = await one('SELECT question FROM security_q WHERE user_id=?', [data.uid]);
+    return { ok: true, total: rows.length, remaining: rows.filter(r => !r.used_at).length,
+      hasQuestion: !!sq, question: sq ? sq.question : null };
+  },
+
+  async generateBackupCodes({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    await run('DELETE FROM backup_codes WHERE user_id=?', [data.uid]);
+    const codes = [];
+    for (let i = 0; i < 8; i++) {
+      const c = newBackupCode();
+      codes.push(c);
+      await run('INSERT INTO backup_codes (user_id, code_hash) VALUES (?,?)', [data.uid, sha(normCode(c))]);
+    }
+    return { ok: true, codes };
+  },
+
+  async loginWithBackupCode({ email, code }) {
+    email = (email || '').trim().toLowerCase();
+    if (await recFailCount(email) >= 10) return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
+    const user = await one('SELECT * FROM users WHERE email=?', [email]);
+    const row = user && await one('SELECT * FROM backup_codes WHERE user_id=? AND code_hash=? AND used_at IS NULL',
+      [user.id, sha(normCode(code))]);
+    if (!row) { await recFailHit(email); return { ok: false, error: 'That backup code is not valid or was already used' }; }
+    await run('UPDATE backup_codes SET used_at=? WHERE user_id=? AND code_hash=?', [now(), user.id, sha(normCode(code))]);
+    await run('DELETE FROM rec_fails WHERE email=?', [email]);
+    const pub = { id: Number(user.id), name: user.name, email: user.email };
+    return { ok: true, token: makeToken(pub), user: pub };
+  },
+
+  async resetWithBackupCode({ email, code, newPassword }) {
+    email = (email || '').trim().toLowerCase();
+    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if (await recFailCount(email) >= 10) return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
+    const user = await one('SELECT * FROM users WHERE email=?', [email]);
+    const row = user && await one('SELECT * FROM backup_codes WHERE user_id=? AND code_hash=? AND used_at IS NULL',
+      [user.id, sha(normCode(code))]);
+    if (!row) { await recFailHit(email); return { ok: false, error: 'That backup code is not valid or was already used' }; }
+    await run('UPDATE backup_codes SET used_at=? WHERE user_id=? AND code_hash=?', [now(), user.id, sha(normCode(code))]);
+    await run('UPDATE users SET pass_hash=? WHERE email=?', [hashPassword(newPassword), email]);
+    await run('DELETE FROM login_fails WHERE email=?', [email]);
+    await run('DELETE FROM rec_fails WHERE email=?', [email]);
+    return { ok: true, message: 'Password changed — log in with your new password' };
+  },
+
+  async setSecurityQuestion({ token, question, answer, currentPassword }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    question = (question || '').trim();
+    if (question.length < 8) return { ok: false, error: 'Please choose a security question' };
+    if (normAnswer(answer).length < 2) return { ok: false, error: 'Please enter your answer' };
+    const user = await one('SELECT * FROM users WHERE id=?', [data.uid]);
+    if (!user || !verifyPassword(currentPassword || '', user.pass_hash))
+      return { ok: false, error: 'Current password is incorrect' };
+    await run(`INSERT INTO security_q (user_id, question, answer_hash) VALUES (?,?,?)
+      ON CONFLICT(user_id) DO UPDATE SET question=excluded.question, answer_hash=excluded.answer_hash`,
+      [data.uid, question, sha(normAnswer(answer))]);
+    return { ok: true };
+  },
+
+  async securityQuestion({ email }) {
+    email = (email || '').trim().toLowerCase();
+    const user = await one('SELECT id FROM users WHERE email=?', [email]);
+    if (!user) return { ok: false, error: 'No account found for this email' };
+    const sq = await one('SELECT question FROM security_q WHERE user_id=?', [user.id]);
+    if (!sq) return { ok: false, error: 'No security question is set on this account — use an email code or a backup code instead' };
+    return { ok: true, question: sq.question };
+  },
+
+  async resetWithAnswer({ email, answer, newPassword }) {
+    email = (email || '').trim().toLowerCase();
+    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if (await recFailCount(email) >= 10) return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
+    const user = await one('SELECT id FROM users WHERE email=?', [email]);
+    const sq = user && await one('SELECT * FROM security_q WHERE user_id=?', [user.id]);
+    if (!sq) return { ok: false, error: 'No security question is set on this account' };
+    if (sha(normAnswer(answer)) !== sq.answer_hash) {
+      await recFailHit(email);
+      return { ok: false, error: 'That answer does not match — please try again' };
+    }
+    await run('UPDATE users SET pass_hash=? WHERE email=?', [hashPassword(newPassword), email]);
+    await run('DELETE FROM login_fails WHERE email=?', [email]);
+    await run('DELETE FROM rec_fails WHERE email=?', [email]);
+    return { ok: true, message: 'Password changed — log in with your new password' };
+  },
+
+  async changePassword({ token, currentPassword, newPassword }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    const user = await one('SELECT * FROM users WHERE id=?', [data.uid]);
+    if (!user || !verifyPassword(currentPassword || '', user.pass_hash))
+      return { ok: false, error: 'Current password is incorrect' };
+    await run('UPDATE users SET pass_hash=? WHERE id=?', [hashPassword(newPassword), data.uid]);
     return { ok: true };
   }
 };
