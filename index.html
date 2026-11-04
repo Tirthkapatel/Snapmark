@@ -473,6 +473,18 @@
   .tourBtns button.primary{ background:#26221c; color:#fff8e7; padding:10px 18px; }
   #tourSkip{ background:none; color:#8a8171; padding-left:4px; }
 
+  /* ===== USERNAMES + LETTERS v27 ===== */
+  .tabBadge{ position:absolute; top:2px; right:4px; min-width:16px; height:16px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:9.5px; font-weight:800; display:none; align-items:center; justify-content:center; box-sizing:border-box; z-index:2; }
+  .tabBadge.on{ display:flex; }
+  #ltSugg{ display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  .suggChip{ border:1.5px solid #ddd3ba; background:#fffdf6; border-radius:999px; padding:5px 11px; font-size:12px; font-weight:700; color:#26221c; cursor:pointer; font-family:inherit; }
+  .suggChip small{ color:#8a8171; font-weight:600; }
+  textarea.fld{ resize:none; line-height:1.45; font-family:inherit; }
+  .letterCard.unread{ border-color:#d9a83f; box-shadow:0 2px 14px rgba(217,168,63,.25); }
+  .letterCard .newDot{ color:#d2452c; font-weight:800; font-size:10.5px; letter-spacing:.4px; }
+  #suUserStat.ok{ color:#2e7d3a; }
+  #suUserStat.bad{ color:#b3372a; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -653,7 +665,8 @@
     <!-- LETTERS -->
     <section class="screen" id="letterScreen">
       <div class="scroll"><div class="page">
-        <div class="pageTitle" style="margin-bottom:14px">Letters</div>
+        <div class="pageTitle" style="margin-bottom:4px">Letters</div>
+        <div class="otpSub" id="myHandle" style="margin:0 0 12px"></div>
         <div class="segTabs"><div class="sel" id="tabRecv">Received</div><div id="tabSent">Sent</div></div>
         <div id="letterBody"></div>
       </div></div>
@@ -666,6 +679,13 @@
         <div class="setCard">
           <h3>Account</h3>
           <div class="sub" style="margin-bottom:2px"><b id="setName">User</b><br><span id="setEmail">email</span></div>
+        </div>
+        <div class="setCard">
+          <h3>Username</h3>
+          <div class="sub">Your unique Snapmark handle. Friends use it to send you letters — one username can belong to only one person.</div>
+          <div class="setStat" id="unStat"></div>
+          <button class="bigBtn" id="unChangeBtn">Change username</button>
+          <div class="authErr" id="unErr"></div>
         </div>
         <div class="setCard">
           <h3>App tour</h3>
@@ -762,6 +782,7 @@
     </button>
     <button data-go="letterScreen" title="Letters">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="12" width="36" height="25" rx="3"/><path d="M7 14l17 13L41 14"/></svg>
+      <span class="tabBadge" id="letterBadge"></span>
     </button>
   </nav>
   <!-- APP TOUR -->
@@ -821,6 +842,9 @@
         <div class="authTabs"><div id="tabLogin2">Log in</div><div id="tabSignup2" class="sel">Sign up</div></div>
         <div class="fLab">Your name</div>
         <input class="fld" id="suName" type="text" placeholder="Full name" autocomplete="name">
+        <div class="fLab">Choose a username</div>
+        <input class="fld" id="suUser" type="text" placeholder="@yourname" autocomplete="username" autocapitalize="none" spellcheck="false">
+        <div class="strengthTxt" id="suUserStat">Your unique @handle — friends will send you letters on it. One username belongs to one person only.</div>
         <div class="fLab">Email</div>
         <input class="fld" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
         <div class="fLab">Password</div>
@@ -1108,6 +1132,7 @@ function setBusy(btn, busy, txt){ if(busy){ btn.dataset.old=btn.textContent; btn
 
 $('#otpBtn').onclick=async(e)=>{
   if(!$('#suAgree').checked){ $('#signupErr').textContent='Please accept the Terms & Conditions and Privacy Policy to continue.'; $('#suAgree').focus(); return; }
+  if(!suUserOK){ $('#signupErr').textContent='Please choose an available username first.'; $('#suUser').focus(); return; }
   const email=$('#suEmail').value.trim(), name=$('#suName').value.trim(), pass=$('#suPass').value;
   if(name.length<2){ $('#signupErr').textContent='Please enter your name'; return; }
   if(pass.length<6){ $('#signupErr').textContent='Password must be at least 6 characters'; return; }
@@ -1125,7 +1150,7 @@ $('#verifyBtn').onclick=async(e)=>{
   if(!v.ok){ setBusy(e.target, false); $('#otpErr').textContent=v.error;
     const bx=$('#otpBoxes'); bx.classList.remove('shake'); void bx.offsetWidth; bx.classList.add('shake'); return; }
   if(otpCtx.mode==='signup'){
-    const r=await api('register', { name:$('#suName').value, email: otpCtx.email, password:$('#suPass').value, code });
+    const r=await api('register', { name:$('#suName').value, email: otpCtx.email, password:$('#suPass').value, code, username:$('#suUser').value });
     setBusy(e.target, false);
     if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
       toast('Welcome, '+r.user.name+'! 🎉'); authView('setup'); }
@@ -1168,6 +1193,7 @@ async function enterApp(){
   if(!session) return;
   requestAnimationFrame(()=>setNav(curNav));
   $('#avatarBtn').textContent=(session.user.name||'S').trim()[0].toUpperCase();
+  if(!session.user.username){ const m=await api('me', { token: session.token }); if(m.ok && m.user){ session.user=m.user; localStorage.setItem('snapmark_session', JSON.stringify(session)); } }
   const r=await api('listStamps', { token: session.token });
   if(r.ok){
     const serverIds=new Set(r.stamps.map(s=>String(s.id)));
@@ -1189,6 +1215,17 @@ async function enterApp(){
         notify('⚠️', r.remaining ? 'Backup codes running low' : 'Backup codes finished',
           r.remaining ? 'Only '+r.remaining+' backup code'+(r.remaining>1?'s':'')+' left. Generate a fresh set in Settings → Backup codes so you never get locked out.'
                       : 'You have no backup codes left. Generate a fresh set in Settings → Backup codes so you never get locked out.'); }, 1400);
+    }
+  }).catch(()=>{});
+  /* nayi letter aayi ho to badge + notification */
+  api('unreadLetters', { token: session.token }).then(r=>{
+    if(!r.ok) return;
+    setLetterBadge(r.count);
+    const key='snapmark_letter_seen_'+session.user.id;
+    const lastSeen=Number(localStorage.getItem(key)||0);
+    if(r.latest && r.latest.id>lastSeen){
+      localStorage.setItem(key, String(r.latest.id));
+      notify('📬','You got a letter!','@'+(r.latest.fromUsername||'someone')+' sent you a letter: "'+String(r.latest.body||'').slice(0,60)+'" — open the Letters tab to read it.');
     }
   }).catch(()=>{});
   welcomeNotif();
@@ -1575,53 +1612,66 @@ $('#projAddBtn').onclick=async()=>{
   if(r && chosen.size){ curProj.stampIds.push(...chosen); saveAll(); openProject(curProj.id); toast(chosen.size+' stamp'+(chosen.size>1?'s':'')+' placed 📖'); }
 };
 
-/* ---------- letters ---------- */
-function renderLetters(){
+/* ---------- letters (server delivery — asli kaam) ---------- */
+let letterData={ received:[], sent:[] };
+function setLetterBadge(n){ const b=$('#letterBadge'); if(!b) return; b.textContent=n; b.classList.toggle('on', n>0); }
+function fmtDay(ts){ return new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); }
+const escH=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+async function renderLetters(){
   const body=$('#letterBody');
   body.classList.remove('fadeSwap'); void body.offsetWidth; body.classList.add('fadeSwap');
   $('#tabRecv').classList.toggle('sel', letterTab==='recv');
   $('#tabSent').classList.toggle('sel', letterTab==='sent');
-  if(!letters.handle){
-    letters.handle = session ? '@'+(session.user.name||'me').trim().toLowerCase().replace(/\s+/g,'') : '@me';
-    saveAll();
-  }
+  const mh=$('#myHandle');
+  if(mh) mh.textContent = session && session.user.username
+    ? 'Your handle: @'+session.user.username+' — friends send you letters on it 💌'
+    : 'Set your username in Settings so friends can send you letters.';
+  body.innerHTML=`<div class="emptyNote" style="padding-top:40px">Loading your letters...</div>`;
+  const r=await api('listLetters', { token: session.token });
+  if(r.ok) letterData={ received:r.received, sent:r.sent };
+  let html='';
   if(letterTab==='recv'){
-    body.innerHTML=`<div class="emptyNote" style="padding-top:60px"><span class="big">no letters yet</span>
-      When a friend sends you a letter, it will appear here. Meanwhile, write your first letter from the Sent tab!</div>
-      <button class="bigBtn" id="writeBtn">✍️ Write a letter</button>`;
-    $('#writeBtn').onclick=()=>{ letterTab='sent'; renderLetters(); setTimeout(composeLetter,60); };
-    return;
+    html+=`<button class="bigBtn" id="writeBtn">✍️ Write a letter</button>`;
+    if(!letterData.received.length) html+=`<div class="emptyNote" style="padding-top:34px"><span class="big">no letters yet</span>When a friend sends you a letter on your @handle, it will arrive here.</div>`;
+    letterData.received.forEach(L=>{
+      html+=`<div class="letterCard ${L.read?'':'unread'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">From @${escH(L.fromUsername)} (${escH(L.fromName)}) · ${fmtDay(L.ts)} ${L.read?'':'· <span class="newDot">● NEW</span>'}</div></div></div>`;
+    });
+    body.innerHTML=html;
+    if(letterData.received.some(L=>!L.read)){ api('markLettersRead', { token: session.token }); setLetterBadge(0); letterData.received.forEach(L=>L.read=true); }
+  } else {
+    html+=`<button class="bigBtn" id="writeBtn">✍️ Write a new letter</button>`;
+    if(!letterData.sent.length) html+=`<div class="emptyNote" style="padding-top:34px"><span class="big">nothing sent</span>No letters sent yet — write your first one!</div>`;
+    letterData.sent.forEach(L=>{
+      html+=`<div class="letterCard">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">To @${escH(L.toUsername)} (${escH(L.toName)}) · ${fmtDay(L.ts)}</div></div></div>`;
+    });
+    body.innerHTML=html;
   }
-  let html=`<button class="bigBtn" id="writeBtn">✍️ Write a new letter</button>`;
-  if(!letters.sent.length) html+=`<div class="emptyNote"><span class="big">nothing sent</span>No letters sent yet.</div>`;
-  letters.sent.slice().reverse().forEach(L=>{
-    const s=stamps.find(s=>s.id===L.stampId);
-    html+=`<div class="letterCard">${s?`<img src="${s.img}">`:''}<div><div class="lm">${L.msg}</div><div class="lt">To ${L.to} · ${L.date}</div></div></div>`;
-  });
-  body.innerHTML=html;
   $('#writeBtn').onclick=composeLetter;
 }
 async function composeLetter(){
-  if(!stamps.length){ toast('Make a stamp first, then write a letter'); return; }
-  const r=await openModal('Write a letter',
-    `<div class="fLab">To (@handle)</div><input class="fld" data-k="to" placeholder="@friend">
-     <div class="fLab">Your message</div><input class="fld" data-k="msg" placeholder="Write something nice…">`, 'Send letter');
-  if(!r || !r.to.trim() || !r.msg.trim()) return;
-  letters.sent.push({ to: r.to.trim().startsWith('@')?r.to.trim():'@'+r.to.trim(), msg: r.msg.trim(), stampId: stamps[0].id,
-    date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) });
-  saveAll(); renderLetters(); toast('Letter sent ✉️ (saved on this device)');
+  const p=openModal('Write a letter',
+    `<div class="fLab">To (@username)</div><input class="fld" data-k="to" id="ltTo" placeholder="@friend" autocapitalize="none" spellcheck="false"><div id="ltSugg"></div>
+     <div class="fLab">Your message</div><textarea class="fld" data-k="msg" rows="3" placeholder="Write something nice..."></textarea>`, 'Send letter');
+  const toIn=$('#ltTo'), sugg=$('#ltSugg'); let sTimer=null;
+  toIn.addEventListener('input', ()=>{
+    clearTimeout(sTimer);
+    const q=toIn.value.trim().replace(/^@+/,'');
+    if(q.length<2){ sugg.innerHTML=''; return; }
+    sTimer=setTimeout(async()=>{
+      const r=await api('searchUsers', { token: session.token, q });
+      if(!r.ok || !r.users.length){ sugg.innerHTML='<span class="strengthTxt bad">No user found — check the username</span>'; return; }
+      sugg.innerHTML=r.users.map(u=>`<button type="button" class="suggChip" data-u="${escH(u.username)}">@${escH(u.username)} <small>${escH(u.name)}</small></button>`).join('');
+      sugg.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ toIn.value='@'+b.dataset.u; sugg.innerHTML=''; });
+    }, 350);
+  });
+  const r=await p;
+  if(!r || !r.to || !r.to.trim() || !r.msg || !r.msg.trim()) return;
+  const stampImg = stamps.length && typeof stamps[0].img==='string' && stamps[0].img.startsWith('http') ? stamps[0].img : null;
+  const s=await api('sendLetter', { token: session.token, to: r.to, body: r.msg, stampImg });
+  if(!s.ok){ toast('✉️ '+(s.error||'Letter could not be sent')); return; }
+  toast('Letter sent to @'+s.to+' ✉️');
+  letterTab='sent'; renderLetters();
 }
-document.querySelector('.qBtn').onclick=()=>{
-  openModal('None or Template?',
-    `<p class="otpSub" style="margin-top:0"><b>None</b> — a clean stamp with only your photo, like a simple snapshot.</p>
-     <p class="otpSub"><b>Template</b> — your photo dressed like a real postage stamp, with the SNAPMARK banner and ₹1 mark.</p>`, 'Got it');
-};
-$('#calTodayBtn').onclick=()=>{
-  document.querySelector('#calScreen .scroll').scrollTo({ top:0, behavior:'smooth' });
-  setTimeout(()=>{ const t=document.querySelector('.calGrid .cell.today'); if(t){ t.scrollIntoView({ block:'center', behavior:'smooth' });
-    t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse'); } }, 350);
-  toast('Today 📅');
-};
 $('#tabRecv').onclick=()=>{ letterTab='recv'; renderLetters(); };
 $('#tabSent').onclick=()=>{ letterTab='sent'; renderLetters(); };
 
@@ -1688,6 +1738,7 @@ async function loadSettings(){
   refreshNotifPref();
   if(!session) return;
   $('#setName').textContent=session.user.name||'User';
+  const unEl=$('#unStat'); if(unEl) unEl.textContent=session.user.username ? '@'+session.user.username : 'Not set yet';
   $('#setEmail').textContent=session.user.email||'';
   const r=await api('backupStatus', { token: session.token });
   if(r.ok){
@@ -1701,6 +1752,13 @@ async function loadSettings(){
 $('#settingsBtn').onclick=()=>{ closeAcct(); showScreen('settingsScreen'); };
 $('#setBack').onclick=()=>{ showScreen('camScreen', true); setNav(0); };
 $('#setLogoutBtn').onclick=()=>$('#logoutBtn').click();
+$('#unChangeBtn').onclick=async()=>{
+  const v=await askText('Change username', 'New username', '@yourname', 'Save');
+  if(!v) return;
+  const r=await api('setUsername', { token: session.token, username: v });
+  if(r.ok){ session.user.username=r.username; localStorage.setItem('snapmark_session', JSON.stringify(session)); $('#unErr').textContent=''; $('#unStat').textContent='@'+r.username; toast('Username updated ✓ @'+r.username); }
+  else $('#unErr').textContent=r.error;
+};
 $('#bkGenBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Generating…');
   const r=await api('generateBackupCodes', { token: session.token });
@@ -1830,7 +1888,8 @@ const PRIVACY_HTML = `<p>${LEGAL_UPDATED}</p>
 <h4>1. What we collect</h4>
 <p><b>Account details:</b> your name and email address, and your password — stored only as a salted cryptographic hash, never in plain text. Backup codes and security-question answers are also stored hashed.</p>
 <p><b>Your stamps:</b> the photos you turn into stamps are uploaded to our cloud photo storage (Cloudinary) so they stay backed up and available when you log in. Stamp details — collection name, date and caption — are stored with your account on our server.</p>
-<p><b>On your device:</b> collections, scrapbook projects and letters are kept in your browser's local storage on your device.</p>
+<p><b>On your device:</b> collections and scrapbook projects are kept in your browser's local storage on your device.</p>
+<p><b>Letters:</b> when you send a letter, it travels through our server to the Snapmark user whose @username you addressed it to, and is stored there so they can read it in their Letters inbox.</p>
 <h4>2. Why we use it</h4>
 <p>Only to run Snapmark for you: signing you in, saving and showing your stamps, backing them up, and keeping your account secure. We do not sell your data, we do not show ads, and we do not use advertising trackers.</p>
 <h4>3. Who can see your photos</h4>
@@ -1868,6 +1927,21 @@ $('#legalTermsBtn').onclick=()=>openLegal('terms');
 $('#suPrivacyLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('privacy'); };
 $('#suTermsLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('terms'); };
 $('#suAgree').onchange=e=>$('#otpBtn').classList.toggle('dim', !e.target.checked);
+let suUserOK=false, suUserTimer=null;
+$('#suUser').addEventListener('input', ()=>{
+  const u=$('#suUser').value.trim().replace(/^@+/,'').toLowerCase();
+  const st=$('#suUserStat'); suUserOK=false;
+  if(!u){ st.textContent='Your unique @handle — friends will send you letters on it. One username belongs to one person only.'; st.className='strengthTxt'; return; }
+  if(!/^[a-z][a-z0-9._]{2,19}$/.test(u) || u.includes('..') || u.endsWith('.')){ st.textContent='Use 3-20 characters: letters, numbers, dot or underscore, starting with a letter.'; st.className='strengthTxt bad'; return; }
+  st.textContent='Checking @'+u+' …'; st.className='strengthTxt';
+  clearTimeout(suUserTimer);
+  suUserTimer=setTimeout(async()=>{
+    const r=await api('checkUsername', { username:u });
+    if($('#suUser').value.trim().replace(/^@+/,'').toLowerCase()!==u) return;
+    if(r.ok && r.available){ suUserOK=true; st.textContent='✓ @'+u+' is available'; st.className='strengthTxt ok'; }
+    else { st.textContent='✗ @'+u+' is already taken — try another'; st.className='strengthTxt bad'; }
+  }, 400);
+});
 
 /* ===== APP TOUR ===== */
 const TOUR_STEPS=[

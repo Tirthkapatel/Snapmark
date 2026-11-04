@@ -74,6 +74,15 @@ CREATE TABLE IF NOT EXISTS rec_fails (
   email TEXT PRIMARY KEY,
   count INTEGER NOT NULL DEFAULT 0,
   window_start INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS letters (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id INTEGER NOT NULL,
+  to_id INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  stamp_img TEXT,
+  created_at INTEGER NOT NULL,
+  read_at INTEGER
 );`;
 
 /* ---------- recovery helpers (backup codes + security question) ---------- */
@@ -98,9 +107,37 @@ async function recFailCount(email) {
   if (f && now() - Number(f.window_start) < 3600 * 1000) return Number(f.count);
   return 0;
 }
+/* ---------- usernames (Instagram-style: ek username, ek hi user) ---------- */
+const normUsername = u => String(u || '').trim().replace(/^@+/, '').toLowerCase();
+const validUsername = u => /^[a-z][a-z0-9._]{2,19}$/.test(u) && !u.includes('..') && !u.endsWith('.');
+async function usernameTaken(u, exceptId) {
+  const r = await one('SELECT id FROM users WHERE username=?', [u]);
+  return !!r && Number(r.id) !== Number(exceptId || 0);
+}
+function usernameBase(email, name) {
+  let b = normUsername((email || '').split('@')[0] || '');
+  if (!validUsername(b)) b = normUsername((name || '').replace(/\s+/g, '.'));
+  if (!validUsername(b)) b = 'user' + b.replace(/[^a-z0-9._]/g, '');
+  if (!validUsername(b)) b = 'snapmark.user';
+  return b.slice(0, 20);
+}
+async function backfillUsernames() {
+  const rows = await allRows('SELECT id, name, email FROM users WHERE username IS NULL OR username=?', ['']);
+  for (const u of rows) {
+    let base = usernameBase(u.email, u.name), cand = base, n = 1;
+    while (await usernameTaken(cand, u.id)) { n++; cand = (base.slice(0, 17) + n).slice(0, 20); }
+    await run('UPDATE users SET username=? WHERE id=?', [cand, u.id]);
+  }
+}
+
 let schemaReady = null;
 function ensureSchema() {
-  if (!schemaReady) schemaReady = db.executeMultiple(SCHEMA).catch(e => { schemaReady = null; throw e; });
+  if (!schemaReady) schemaReady = (async () => {
+    await db.executeMultiple(SCHEMA);
+    try { await db.execute('ALTER TABLE users ADD COLUMN username TEXT'); } catch (e) { /* column already there */ }
+    try { await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)'); } catch (e) {}
+    await backfillUsernames();
+  })().catch(e => { schemaReady = null; throw e; });
   return schemaReady;
 }
 async function one(sql, args = []) { const r = await db.execute({ sql, args }); return r.rows[0]; }
@@ -219,19 +256,28 @@ const actions = {
     return issueOtp(email, 'signup');
   },
 
-  async register({ name, email, password, code }) {
+  async checkUsername({ username }) {
+    const u = normUsername(username);
+    if (!validUsername(u)) return { ok: true, available: false, error: 'Use 3-20 characters: letters, numbers, dot or underscore, starting with a letter' };
+    return { ok: true, available: !(await usernameTaken(u)) };
+  },
+
+  async register({ name, email, password, code, username }) {
     name = (name || '').trim();
     email = (email || '').trim().toLowerCase();
+    const uname = normUsername(username);
     if (name.length < 2) return { ok: false, error: 'Please enter your name' };
+    if (!validUsername(uname)) return { ok: false, error: 'Please choose a valid username (3-20 characters: letters, numbers, dot or underscore)' };
+    if (await usernameTaken(uname)) return { ok: false, error: 'That username is taken — please try another' };
     if (!validEmail(email) || isTempMail(email)) return { ok: false, error: 'Enter a valid email address' };
     if ((password || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
     if (await one('SELECT id FROM users WHERE email=?', [email]))
       return { ok: false, error: 'An account with this email already exists — please log in' };
     const err = await checkOtp(email, 'signup', code);
     if (err) return { ok: false, error: err };
-    const info = await run('INSERT INTO users (name, email, pass_hash, created_at) VALUES (?,?,?,?)',
-      [name, email, hashPassword(password), now()]);
-    const user = { id: Number(info.lastInsertRowid), name, email };
+    const info = await run('INSERT INTO users (name, email, pass_hash, created_at, username) VALUES (?,?,?,?,?)',
+      [name, email, hashPassword(password), now(), uname]);
+    const user = { id: Number(info.lastInsertRowid), name, email, username: uname };
     await run('INSERT INTO user_data (user_id, colls) VALUES (?,?)', [user.id, JSON.stringify(['My Collection'])]);
     return { ok: true, token: makeToken(user), user };
   },
@@ -283,16 +329,16 @@ const actions = {
       return { ok: false, error: 'Incorrect email or password' };
     }
     await run('DELETE FROM login_fails WHERE email=?', [email]);
-    const pub = { id: Number(user.id), name: user.name, email: user.email };
+    const pub = { id: Number(user.id), name: user.name, email: user.email, username: user.username || null };
     return { ok: true, token: makeToken(pub), user: pub };
   },
 
   async me({ token }) {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Session expired — please log in again' };
-    const user = await one('SELECT id, name, email FROM users WHERE id=?', [data.uid]);
+    const user = await one('SELECT id, name, email, username FROM users WHERE id=?', [data.uid]);
     if (!user) return { ok: false, error: 'User not found' };
-    return { ok: true, user: { id: Number(user.id), name: user.name, email: user.email } };
+    return { ok: true, user: { id: Number(user.id), name: user.name, email: user.email, username: user.username || null } };
   },
 
   async saveStamp({ token, stamp }) {
@@ -361,7 +407,7 @@ const actions = {
     if (!row) { await recFailHit(email); return { ok: false, error: 'That backup code is not valid or was already used' }; }
     await run('UPDATE backup_codes SET used_at=? WHERE user_id=? AND code_hash=?', [now(), user.id, sha(normCode(code))]);
     await run('DELETE FROM rec_fails WHERE email=?', [email]);
-    const pub = { id: Number(user.id), name: user.name, email: user.email };
+    const pub = { id: Number(user.id), name: user.name, email: user.email, username: user.username || null };
     return { ok: true, token: makeToken(pub), user: pub };
   },
 
@@ -429,6 +475,75 @@ const actions = {
     if (!user || !verifyPassword(currentPassword || '', user.pass_hash))
       return { ok: false, error: 'Current password is incorrect' };
     await run('UPDATE users SET pass_hash=? WHERE id=?', [hashPassword(newPassword), data.uid]);
+    return { ok: true };
+  },
+
+  /* ----- usernames + letters (asli delivery, server par) ----- */
+  async setUsername({ token, username }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const u = normUsername(username);
+    if (!validUsername(u)) return { ok: false, error: 'Use 3-20 characters: letters, numbers, dot or underscore, starting with a letter' };
+    if (await usernameTaken(u, data.uid)) return { ok: false, error: 'That username is taken — please try another' };
+    await run('UPDATE users SET username=? WHERE id=?', [u, data.uid]);
+    return { ok: true, username: u };
+  },
+
+  async searchUsers({ token, q }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const s = normUsername(q);
+    if (s.length < 2) return { ok: true, users: [] };
+    const rows = await allRows(
+      'SELECT username, name FROM users WHERE id<>? AND username IS NOT NULL AND (username LIKE ? OR LOWER(name) LIKE ?) ORDER BY username LIMIT 6',
+      [data.uid, s + '%', '%' + String(q || '').trim().toLowerCase() + '%']);
+    return { ok: true, users: rows.map(r => ({ username: r.username, name: r.name })) };
+  },
+
+  async sendLetter({ token, to, body, stampImg }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const uname = normUsername(to);
+    const text = String(body || '').trim();
+    if (!text) return { ok: false, error: 'Write a message first' };
+    if (text.length > 1000) return { ok: false, error: 'Letter is too long (max 1000 characters)' };
+    const recip = await one('SELECT id, username FROM users WHERE username=?', [uname]);
+    if (!recip) return { ok: false, error: 'No Snapmark user with @' + uname + ' — check the username and try again' };
+    if (Number(recip.id) === Number(data.uid)) return { ok: false, error: 'You cannot send a letter to yourself' };
+    const img = typeof stampImg === 'string' && stampImg.startsWith('http') ? stampImg : null;
+    await run('INSERT INTO letters (from_id, to_id, body, stamp_img, created_at) VALUES (?,?,?,?,?)',
+      [data.uid, recip.id, text, img, now()]);
+    return { ok: true, to: recip.username };
+  },
+
+  async listLetters({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const recv = await allRows(
+      `SELECT l.id, l.body, l.stamp_img, l.created_at, l.read_at, u.username AS fu, u.name AS fn
+       FROM letters l JOIN users u ON u.id=l.from_id WHERE l.to_id=? ORDER BY l.created_at DESC LIMIT 50`, [data.uid]);
+    const sent = await allRows(
+      `SELECT l.id, l.body, l.stamp_img, l.created_at, u.username AS tu, u.name AS tn
+       FROM letters l JOIN users u ON u.id=l.to_id WHERE l.from_id=? ORDER BY l.created_at DESC LIMIT 50`, [data.uid]);
+    return { ok: true,
+      received: recv.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, ts: Number(r.created_at), read: !!r.read_at, fromUsername: r.fu, fromName: r.fn })),
+      sent: sent.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, ts: Number(r.created_at), toUsername: r.tu, toName: r.tn })) };
+  },
+
+  async unreadLetters({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const rows = await allRows(
+      `SELECT l.id, l.body, u.username AS fu FROM letters l JOIN users u ON u.id=l.from_id
+       WHERE l.to_id=? AND l.read_at IS NULL ORDER BY l.created_at DESC`, [data.uid]);
+    return { ok: true, count: rows.length,
+      latest: rows.length ? { id: Number(rows[0].id), fromUsername: rows[0].fu, body: rows[0].body } : null };
+  },
+
+  async markLettersRead({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    await run('UPDATE letters SET read_at=? WHERE to_id=? AND read_at IS NULL', [now(), data.uid]);
     return { ok: true };
   }
 };
