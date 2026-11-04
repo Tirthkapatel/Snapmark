@@ -16,7 +16,7 @@ const { createClient } = require('@libsql/client');
 const PORT = process.env.PORT || 8792;
 const SECRET = process.env.SESSION_SECRET || 'dev-secret-change-in-prod';
 const SENDER = process.env.SENDER_EMAIL || '';
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '671328811115-3c30cuorrj44lc46948c2bem2ieug36b.apps.googleusercontent.com';
 const APP_PASS = process.env.GMAIL_APP_PASSWORD || '';
 
 const db = process.env.TURSO_DATABASE_URL

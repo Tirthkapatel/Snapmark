@@ -1272,7 +1272,7 @@ async function uploadToCloud(rec){
 
 /* ---------- Server + Auth (Scribly-style) ---------- */
 const API = window.SNAPMARK_API || (location.protocol.startsWith('http') ? location.origin + '/api' : 'http://localhost:8792/api');
-const GOOGLE_CLIENT_ID = ''; /* Google OAuth Client ID (public) — milte hi Google buttons live ho jayenge */
+const GOOGLE_CLIENT_ID = '671328811115-3c30cuorrj44lc46948c2bem2ieug36b.apps.googleusercontent.com'; /* Google OAuth Client ID (public) */
 let session = JSON.parse(localStorage.getItem('snapmark_session') || 'null');
 async function api(action, params){
   try{
