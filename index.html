@@ -667,6 +667,16 @@
   #tabbar.dark{ background:rgba(22,20,16,.9); }
   #bookScreen .page{ padding-bottom:150px; }
 
+  /* ===== v36 TYPOGRAPHY POLISH ===== */
+  :root{ --grey:#6f6a5e; }
+  .ltBtnRow .bigBtn{ display:flex; align-items:center; justify-content:center; gap:8px; }
+  .penIcon{ width:17px; height:17px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .emptyNote{ color:#6f6a5e; font-weight:500; line-height:1.55; }
+  .folder p, .proj .meta p, .letterCard .lt, .calBig .y, .monthLab span{ color:#6f6a5e; font-weight:500; }
+  .setCard .sub, #authScreen .aTag, .otpSub, .resendRow, .authNote, #acctSheet .ae, .strengthTxt{ color:#6f6a5e; font-weight:500; }
+  .suggChip small, .notifItem .nx, .notifItem .nw, .stampStrip .ssNone{ color:#6f6a5e; font-weight:500; }
+  .fLab, .otpPanelCap{ color:#6f6a5e; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -2114,7 +2124,7 @@ async function renderLetters(){
   if(r.ok) letterData={ received:r.received, sent:r.sent };
   let html='';
   if(letterTab==='recv'){
-    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1">✍️ Write a letter</button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
+    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1"><svg class="penIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg><span>Write a letter</span></button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
     if(!letterData.received.length) html+=`<div class="emptyNote" style="padding-top:30px"><span class="big" style="display:block"><svg class="envIllu" viewBox="0 0 120 94"><rect x="86" y="4" width="24" height="29" rx="2" fill="#fff" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.5 2.5"/><rect x="90.5" y="8.5" width="15" height="20" fill="#ffd9c4"/><path d="M98 13l1.7 3.4 3.8.6-2.7 2.7.6 3.8L98 21.7l-3.4 1.8.6-3.8-2.7-2.7 3.8-.6z" fill="#c96f2e"/><rect x="8" y="30" width="104" height="58" rx="7" fill="#f8eed3" stroke="#dcc794" stroke-width="2"/><path d="M8 34 L60 68 L112 34" fill="none" stroke="#dcc794" stroke-width="2"/><path d="M8 31 L60 64 L112 31 L112 30 L8 30 Z" fill="#efdfba"/><text x="60" y="82" font-size="15" text-anchor="middle">❤</text></svg></span><span class="big" style="display:block;font-size:22px;margin-top:2px">no letters yet</span>When a friend sends you a letter on your @handle, it will arrive here. No friends on Snapmark yet? Invite one!</div>`;
     letterData.received.forEach(L=>{
       html+=`<div class="letterCard paper-${L.paper||'plain'} ${L.read?'':'unread'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">From @${escH(L.fromUsername)} (${escH(L.fromName)}) · ${fmtDay(L.ts)} ${L.read?'':'· <span class="newDot">● NEW</span>'}</div></div></div>`;
@@ -2122,7 +2132,7 @@ async function renderLetters(){
     body.innerHTML=html;
     if(letterData.received.some(L=>!L.read)){ api('markLettersRead', { token: session.token }); setLetterBadge(0); letterData.received.forEach(L=>L.read=true); }
   } else {
-    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1">✍️ Write a letter</button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
+    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1"><svg class="penIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg><span>Write a letter</span></button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
     if(!letterData.sent.length) html+=`<div class="emptyNote" style="padding-top:30px"><span class="big" style="display:block"><svg class="envIllu" viewBox="0 0 120 94"><rect x="86" y="4" width="24" height="29" rx="2" fill="#fff" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.5 2.5"/><rect x="90.5" y="8.5" width="15" height="20" fill="#ffd9c4"/><path d="M98 13l1.7 3.4 3.8.6-2.7 2.7.6 3.8L98 21.7l-3.4 1.8.6-3.8-2.7-2.7 3.8-.6z" fill="#c96f2e"/><rect x="8" y="30" width="104" height="58" rx="7" fill="#f8eed3" stroke="#dcc794" stroke-width="2"/><path d="M8 34 L60 68 L112 34" fill="none" stroke="#dcc794" stroke-width="2"/><path d="M8 31 L60 64 L112 31 L112 30 L8 30 Z" fill="#efdfba"/><text x="60" y="82" font-size="15" text-anchor="middle">❤</text></svg></span><span class="big" style="display:block;font-size:22px;margin-top:2px">nothing sent</span>No letters sent yet — write your first one!</div>`;
     letterData.sent.forEach(L=>{
       html+=`<div class="letterCard paper-${L.paper||'plain'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">To @${escH(L.toUsername)} (${escH(L.toName)}) · ${fmtDay(L.ts)}</div></div></div>`;
