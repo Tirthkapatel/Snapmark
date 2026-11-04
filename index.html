@@ -472,6 +472,84 @@
   .tourBtns button{ border:none; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:600; padding:9px 14px; border-radius:999px; background:rgba(38,34,28,.07); color:#26221c; }
   .tourBtns button.primary{ background:#26221c; color:#fff8e7; padding:10px 18px; }
   #tourSkip{ background:none; color:#8a8171; padding-left:4px; }
+
+  /* ===== NOTIFICATIONS ===== */
+  #bellBtn{ position:relative; }
+  #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
+  #bellBadge.on{ display:flex; animation:chkPop .35s cubic-bezier(.34,1.56,.64,1); }
+  #notifWrap{ position:absolute; inset:0; background:rgba(24,22,16,.5); display:none; z-index:65; }
+  #notifWrap.on{ display:block; animation:wrapFadeIn .25s; }
+  @keyframes wrapFadeIn{ from{ opacity:0; } }
+  #notifSheet{ position:absolute; left:0; right:0; bottom:0; max-height:74%; background:var(--paper); border-radius:22px 22px 0 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; animation:sheetUp .38s cubic-bezier(.32,.72,0,1); }
+  .notifActs{ display:flex; gap:8px; margin:2px 0 8px; }
+  .notifActs button{ border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:700; padding:7px 12px; border-radius:999px; background:rgba(38,34,28,.07); color:#26221c; }
+  #notifList{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .notifItem{ display:flex; gap:11px; padding:11px 4px; border-bottom:1px dashed #e3dcc8; align-items:flex-start; }
+  .notifItem .ni{ font-size:21px; line-height:1.15; }
+  .notifItem .nt{ font-size:13.5px; font-weight:700; color:#26221c; }
+  .notifItem .nx{ font-size:12.5px; color:#6d6656; line-height:1.4; margin-top:1px; }
+  .notifItem .nw{ font-size:10.5px; color:#a3987f; margin-top:3px; }
+  .notifItem.unread .nt::after{ content:''; display:inline-block; width:7px; height:7px; border-radius:99px; background:#d2452c; margin-left:6px; vertical-align:2px; }
+
+  /* ===== LEGAL (privacy / terms) ===== */
+  #legalView{ position:absolute; inset:0; z-index:500; background:var(--paper); display:none; flex-direction:column; }
+  #legalView.on{ display:flex; animation:scrPush .34s cubic-bezier(.32,.72,0,1); }
+  .legalHead{ display:flex; align-items:center; gap:10px; padding:calc(12px + env(safe-area-inset-top)) 16px 10px; border-bottom:1px solid #e7dfc9; }
+  .legalHead .lt{ font-family:'Playfair Display',serif; font-weight:700; font-size:19px; flex:1; }
+  #legalBody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 20px 34px; font-size:13.5px; line-height:1.65; color:#453f31; }
+  #legalBody h4{ font-size:14.5px; color:#26221c; margin:16px 0 4px; }
+  #legalBody h4:first-child{ margin-top:0; }
+  #legalBody p{ margin:0 0 8px; }
+  .agreeRow{ display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.5; color:#5c5546; margin:12px 0 2px; cursor:pointer; text-align:left; }
+  .agreeRow input{ width:18px; height:18px; margin-top:1px; accent-color:#26221c; flex:none; cursor:pointer; }
+  .agreeRow a{ color:#a8542a; font-weight:700; text-decoration:underline; }
+  .authBtn.dim{ opacity:.45; }
+
+  /* ===== SMOOTH PRESS FEEDBACK (transform-only, cheap) ===== */
+  .roundDark, .bigBtn, .authBtn, .setBtn{ transition:transform .16s cubic-bezier(.34,1.4,.64,1), opacity .2s; }
+  .roundDark:active, .bigBtn:active, .authBtn:active, .setBtn:active{ transform:scale(.94); }
+
+  /* ===== LOW-END LITE MODE (no blur, shorter motion — no lag) ===== */
+  .lite .screen.on{ animation:scrInLite .18s ease-out; box-shadow:none; }
+  @keyframes scrInLite{ from{ opacity:0; } }
+  .lite *{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  .lite #tourSpot{ animation:none !important; }
+  .lite .notifItem, .lite .setCard, .lite .codeChip{ animation:none !important; }
+  @media (prefers-reduced-motion: reduce){
+    .screen.on{ animation:scrInLite .15s ease-out !important; box-shadow:none !important; }
+    #tourSpot{ animation:none !important; }
+  }
+
+  /* ===== RESPONSIVE — small phones ===== */
+  @media (max-width:360px){
+    .camTop{ gap:6px; padding-left:10px; padding-right:10px; }
+    .collPill{ font-size:12px; padding:7px 10px; max-width:118px; }
+    .roundDark{ width:34px; height:34px; font-size:15px; }
+    #tabbar button{ font-size:9.5px; }
+    .setCard{ padding:14px 13px; }
+    .stampCard{ padding:20px 16px; }
+    #tourCard{ width:calc(100% - 24px); padding:15px 14px 12px; }
+    #tourTitle{ font-size:19px; }
+    .revBtns button{ padding:13px 10px; font-size:14px; }
+  }
+  @media (max-height:660px){
+    .camHint{ display:none; }
+    #authScreen{ padding-top:20px; }
+    .stampCard{ padding-top:16px; padding-bottom:16px; }
+    .postmark{ width:86px; height:86px; }
+    #tourEmoji{ font-size:32px; }
+  }
+  @media (max-height:560px){
+    .book{ max-width:300px; }
+  }
+  /* ===== RESPONSIVE — large phones / tablets (frame stays centred, content breathes) ===== */
+  @media (min-width:431px){
+    #phone{ border-left:1px solid rgba(255,255,255,.06); border-right:1px solid rgba(255,255,255,.06); }
+  }
+  @media (min-width:768px){
+    .stampCard{ padding:30px 28px; }
+    #legalBody{ padding-left:28px; padding-right:28px; }
+  }
 </style>
 </head>
 <body>
@@ -484,6 +562,7 @@
         <div class="avatar" id="avatarBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.2-3.2 3.8-4.6 7-4.6s5.8 1.4 7 4.6"/></svg></div>
         <button type="button" class="darkPill ddBtn" id="collPill" style="flex:0 1 auto">My Collection ▾</button>
         <div style="flex:1"></div>
+        <div class="roundDark" id="bellBtn" title="Notifications">🔔<span id="bellBadge"></span></div>
         <div class="roundDark" id="sampleBtn" title="Sample">✦</div>
         <div class="roundDark" id="camBtn" title="Camera">📷</div>
         <div class="roundDark" id="flipBtn" title="Switch camera">🔄</div>
@@ -624,6 +703,18 @@
           <div class="authErr" id="cpErr"></div>
         </div>
         <div class="setCard">
+          <h3>Notifications</h3>
+          <div class="sub">Stamp backups, security changes and important updates appear under the 🔔 bell. Turn on device notifications to also get them when the app is in the background.</div>
+          <button class="bigBtn" id="notifPrefBtn">Enable device notifications</button>
+          <div class="setStat" id="notifStat"></div>
+        </div>
+        <div class="setCard">
+          <h3>Legal</h3>
+          <div class="sub">How we handle your photos and data, and the rules of using Snapmark.</div>
+          <button class="bigBtn" id="legalPrivacyBtn" style="margin-bottom:8px">Privacy Policy</button>
+          <button class="bigBtn" id="legalTermsBtn">Terms &amp; Conditions</button>
+        </div>
+        <div class="setCard">
           <h3>About</h3>
           <div class="sub" style="margin-bottom:2px">Snapmark — turn your photos into collectible stamps.<br>Version 1.0 · Made with ♥</div>
         </div>
@@ -689,6 +780,20 @@
       </div>
     </div>
   </div>
+  <!-- NOTIFICATIONS SHEET -->
+  <div id="notifWrap"><div id="notifSheet">
+    <div class="sHead"><span style="font-size:19px">🔔</span><span class="t">Notifications</span><span id="notifClose" style="font-size:17px;cursor:pointer;color:#8a8578;padding:2px 6px">✕</span></div>
+    <div class="notifActs"><button id="notifReadAll" type="button">✓ Mark all read</button><button id="notifClear" type="button">Clear all</button></div>
+    <div id="notifList"></div>
+    <div class="emptyNote" id="notifEmpty" style="display:none;padding:18px">Nothing here yet — stamp saves, cloud backups and account security updates will appear here.</div>
+  </div></div>
+
+  <!-- LEGAL VIEW (privacy / terms) -->
+  <div id="legalView">
+    <div class="legalHead"><span id="legalBack" style="font-size:19px;cursor:pointer;padding:2px 6px">←</span><span class="lt" id="legalTitle">Privacy Policy</span></div>
+    <div id="legalBody"></div>
+  </div>
+
   <!-- AUTH -->
   <div id="authScreen">
     <svg class="aMark" viewBox="0 0 48 48" fill="none" stroke="#26221c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="34" height="34" rx="5" stroke-dasharray="5.5 4.5"/><path d="M14 31l6.5-6.5 4.5 4.5 3.5-3.5L34 31z"/><circle cx="19" cy="17.5" r="2.2"/></svg>
@@ -722,7 +827,8 @@
         <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
         <div class="strength" id="strengthBar"><i></i><i></i><i></i><i></i></div>
         <div class="strengthTxt" id="strengthTxt">Use 6+ characters with numbers or symbols for a stronger password.</div>
-        <button class="authBtn" id="otpBtn">Continue →</button>
+        <label class="agreeRow"><input type="checkbox" id="suAgree"><span>I agree to the <a id="suTermsLink">Terms &amp; Conditions</a> and the <a id="suPrivacyLink">Privacy Policy</a> of Snapmark.</span></label>
+        <button class="authBtn dim" id="otpBtn">Continue →</button>
         <div class="authErr" id="signupErr"></div>
       </div>
     </div>
@@ -865,6 +971,8 @@ let activeColl = colls[0]||'My Collection', gridColl='__all', curProj=null, lett
 
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1900); }
 
+/* Low-end phone? -> lite mode: smooth, no heavy blur/pulse effects */
+if((navigator.hardwareConcurrency||8)<=4 || (navigator.deviceMemory||8)<=2) document.documentElement.classList.add('lite');
 /* ---------- Cloudinary (photo cloud storage) ---------- */
 const CLOUD={ name:'wemovmw9', preset:'snapmark' };
 async function uploadToCloud(rec){
@@ -914,7 +1022,7 @@ $('#bkLoginBtn').onclick=async(e)=>{
   const r=await api('loginWithBackupCode', { email:$('#bkEmail').value, code:$('#bkCode').value });
   setBusy(e.target, false);
   if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
-    toast('Welcome back, '+r.user.name+'! (backup code used)'); enterApp(); }
+    toast('Welcome back, '+r.user.name+'! (backup code used)'); notify('🔐','Signed in with a backup code','This account was accessed using a one-time backup code. That code can never be used again.'); enterApp(); }
   else $('#bkLoginErr').textContent=r.error;
 };
 $('#rbBtn').onclick=async(e)=>{
@@ -999,6 +1107,7 @@ $('#suPass').addEventListener('input', ()=>{
 function setBusy(btn, busy, txt){ if(busy){ btn.dataset.old=btn.textContent; btn.textContent=txt; btn.disabled=true; } else { btn.textContent=btn.dataset.old||btn.textContent; btn.disabled=false; } }
 
 $('#otpBtn').onclick=async(e)=>{
+  if(!$('#suAgree').checked){ $('#signupErr').textContent='Please accept the Terms & Conditions and Privacy Policy to continue.'; $('#suAgree').focus(); return; }
   const email=$('#suEmail').value.trim(), name=$('#suName').value.trim(), pass=$('#suPass').value;
   if(name.length<2){ $('#signupErr').textContent='Please enter your name'; return; }
   if(pass.length<6){ $('#signupErr').textContent='Password must be at least 6 characters'; return; }
@@ -1067,18 +1176,22 @@ async function enterApp(){
     if(r.colls && r.colls.length) colls=r.colls;
     activeColl=colls[0]||'My Collection';
     saveAll(); fillCollSelects(); renderFolders();
-    localOnly.forEach(s=>{ if(s.cloud) syncStamp(s); else uploadToCloud(s); });
+    localOnly.forEach(s=>{ if(s.cloud) syncStamp(s); else uploadToCloud(s).then(ok=>{ if(ok && s.failNote){ s.failNote=false; saveAll(); notify('☁️','Cloud backup complete','A stamp that was waiting is now safely backed up to the cloud.'); } }); });
     api('setCollections', { token: session.token, colls });
   }
   /* backup codes khatam hone ko hon to user ko batao */
   api('backupStatus', { token: session.token }).then(r=>{
     if(r.ok && r.total>0 && r.remaining<=2 && !window._bkWarned){
       window._bkWarned=1;
-      setTimeout(()=>toast(r.remaining
+      setTimeout(()=>{ toast(r.remaining
         ? '⚠️ Only '+r.remaining+' backup code'+(r.remaining>1?'s':'')+' left — generate new ones in Settings'
-        : '⚠️ Your backup codes are finished — generate new ones in Settings'), 1400);
+        : '⚠️ Your backup codes are finished — generate new ones in Settings');
+        notify('⚠️', r.remaining ? 'Backup codes running low' : 'Backup codes finished',
+          r.remaining ? 'Only '+r.remaining+' backup code'+(r.remaining>1?'s':'')+' left. Generate a fresh set in Settings → Backup codes so you never get locked out.'
+                      : 'You have no backup codes left. Generate a fresh set in Settings → Backup codes so you never get locked out.'); }, 1400);
     }
   }).catch(()=>{});
+  welcomeNotif();
   setTimeout(maybeTour, 900);
 }
 $('#logoutBtn').onclick=()=>{
@@ -1270,7 +1383,8 @@ $('#saveBtn').onclick=()=>{
   stamps.unshift(rec);
   saveAll(); toast('Saved to "'+coll+'" 📮');
   gridColl=coll; renderFolders(); openGrid(coll); setNav(1);
-  uploadToCloud(rec).then(ok=>{ if(ok) toast('Backed up to the cloud ☁️'); });
+  if(stamps.length===1) notify('🎉','Your first stamp!','You saved your very first stamp to "'+coll+'". Many more to come!');
+  uploadToCloud(rec).then(ok=>{ if(ok) toast('Backed up to the cloud ☁️'); else { rec.failNote=true; saveAll(); notify('☁️','Cloud backup pending','This stamp is safe on your device — the cloud backup will retry automatically when the connection allows.'); } });
 };
 
 /* ---------- collections ---------- */
@@ -1571,6 +1685,7 @@ $('#mgMoveBtn').onclick=()=>{
 
 /* ---------- settings ---------- */
 async function loadSettings(){
+  refreshNotifPref();
   if(!session) return;
   $('#setName').textContent=session.user.name||'User';
   $('#setEmail').textContent=session.user.email||'';
@@ -1596,20 +1711,21 @@ $('#bkGenBtn').onclick=async(e)=>{
     $('#bkStat').textContent=r.codes.length+' new codes — old ones no longer work';
     $('#bkErr').textContent='';
     toast('Save these codes somewhere safe 📋');
+    notify('🔑','New backup codes','A fresh set of backup codes was generated — your old codes no longer work. Save the new set somewhere safe.');
   } else $('#bkErr').textContent=r.error;
 };
 $('#sqSaveBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Saving…');
   const r=await api('setSecurityQuestion', { token: session.token, question:DD.sqSel||SQ_QS[0], answer:$('#sqAnswer').value, currentPassword:$('#sqPass').value });
   setBusy(e.target, false);
-  if(r.ok){ $('#sqErr').textContent=''; $('#sqPass').value=''; loadSettings(); toast('Security question saved ✓'); }
+  if(r.ok){ $('#sqErr').textContent=''; $('#sqPass').value=''; loadSettings(); toast('Security question saved ✓'); notify('❓','Security question updated','Your password-recovery question was changed just now.'); }
   else $('#sqErr').textContent=r.error;
 };
 $('#cpBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Changing…');
   const r=await api('changePassword', { token: session.token, currentPassword:$('#cpCur').value, newPassword:$('#cpNew').value });
   setBusy(e.target, false);
-  if(r.ok){ $('#cpErr').textContent=''; $('#cpCur').value=''; $('#cpNew').value=''; toast('Password changed ✓'); }
+  if(r.ok){ $('#cpErr').textContent=''; $('#cpCur').value=''; $('#cpNew').value=''; toast('Password changed ✓'); notify('🔐','Password changed','Your account password was updated. If this was not you, reset it right away from the login screen.'); }
   else $('#cpErr').textContent=r.error;
 };
 
@@ -1656,6 +1772,102 @@ document.querySelectorAll('#tabbar button').forEach((b)=>{ b.onclick=()=>{ const
 fillCollSelects(); renderFolders();
 /* login hai to app me ghuso, warna auth screen rahegi */
 if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
+
+/* ===== NOTIFICATIONS (jo khabar user tak pahunchni hi chahiye) ===== */
+function notifKey(){ return 'snapmark_notifs_' + (session && session.user ? session.user.id : 'guest'); }
+function loadNotifs(){ try{ return JSON.parse(localStorage.getItem(notifKey()) || '[]'); }catch(e){ return []; } }
+function storeNotifs(l){ try{ localStorage.setItem(notifKey(), JSON.stringify(l.slice(0,30))); }catch(e){} }
+function renderBadge(){ const n = loadNotifs().filter(x=>!x.read).length; const b=$('#bellBadge'); if(!b) return; b.textContent=n; b.classList.toggle('on', n>0); }
+function timeAgo(ts){ const s=(Date.now()-ts)/1000; if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago'; if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
+function notify(icon, title, text){
+  const l=loadNotifs(); l.unshift({ id:Date.now()+Math.random(), icon, title, text, ts:Date.now(), read:false });
+  storeNotifs(l); renderBadge(); renderNotifList();
+  /* device notification — sirf jab app background me ho (in-app pe toast/badge kaafi hai) */
+  try{ if(localStorage.getItem('snapmark_notif_device')==='1' && 'Notification' in window && Notification.permission==='granted' && document.hidden)
+    new Notification('Snapmark — '+title, { body:text, icon:'📮' }); }catch(e){}
+  /* bell ko halka sa hilao taaki nazar jaye */
+  const bb=$('#bellBtn'); if(bb && !document.documentElement.classList.contains('lite')){ bb.style.animation='none'; void bb.offsetWidth; bb.style.animation='navBump .5s cubic-bezier(.34,1.4,.64,1)'; }
+}
+function welcomeNotif(){
+  const l=loadNotifs();
+  if(!l.length && !localStorage.getItem(notifKey()+'_welcomed')){
+    localStorage.setItem(notifKey()+'_welcomed','1');
+    notify('👋','Welcome to Snapmark!','Snap a photo, turn it into a stamp, and build your collection. Important updates — cloud backups and account security — will always reach you here.');
+  }
+}
+function renderNotifList(){
+  const l=loadNotifs(), box=$('#notifList'); if(!box) return;
+  $('#notifEmpty').style.display = l.length ? 'none':'block';
+  box.innerHTML = l.map(n=>`<div class="notifItem ${n.read?'':'unread'}"><div class="ni">${n.icon}</div><div style="flex:1;min-width:0"><div class="nt">${n.title}</div><div class="nx">${n.text}</div><div class="nw">${timeAgo(n.ts)}</div></div></div>`).join('');
+}
+function openNotifs(){ renderNotifList(); $('#notifWrap').classList.add('on'); }
+function closeNotifs(){ $('#notifWrap').classList.remove('on'); const l=loadNotifs(); l.forEach(n=>n.read=true); storeNotifs(l); setTimeout(renderBadge, 250); }
+$('#bellBtn').onclick=()=>openNotifs();
+$('#notifClose').onclick=()=>closeNotifs();
+$('#notifWrap').onclick=e=>{ if(e.target.id==='notifWrap') closeNotifs(); };
+$('#notifReadAll').onclick=()=>{ const l=loadNotifs(); l.forEach(n=>n.read=true); storeNotifs(l); renderNotifList(); renderBadge(); };
+$('#notifClear').onclick=()=>{ storeNotifs([]); renderNotifList(); renderBadge(); };
+function refreshNotifPref(){
+  const st=$('#notifStat'), btn=$('#notifPrefBtn'); if(!st||!btn) return;
+  const on = localStorage.getItem('snapmark_notif_device')==='1';
+  if(!('Notification' in window)){ st.textContent='This browser does not support device notifications — the 🔔 bell inside the app will still show everything.'; btn.style.display='none'; return; }
+  if(Notification.permission==='denied'){ st.textContent='Device notifications are blocked in your browser settings. The 🔔 bell inside the app still shows everything.'; btn.textContent='Blocked by browser'; return; }
+  btn.textContent = on ? 'Device notifications: ON ✓ (tap to turn off)' : 'Enable device notifications';
+  st.textContent = on ? 'You will also get notified when the app is in the background.' : 'Off — you will only see updates on the 🔔 bell inside the app.';
+}
+$('#notifPrefBtn').onclick=async()=>{
+  if(localStorage.getItem('snapmark_notif_device')==='1'){ localStorage.setItem('snapmark_notif_device','0'); refreshNotifPref(); return; }
+  if(!('Notification' in window)) return;
+  const p = await Notification.requestPermission();
+  if(p==='granted'){ localStorage.setItem('snapmark_notif_device','1'); toast('Device notifications on 🔔'); }
+  refreshNotifPref();
+};
+renderBadge();
+
+/* ===== LEGAL — Privacy Policy & Terms ===== */
+const LEGAL_UPDATED = 'Last updated: 4 November 2026';
+const PRIVACY_HTML = `<p>${LEGAL_UPDATED}</p>
+<h4>1. What we collect</h4>
+<p><b>Account details:</b> your name and email address, and your password — stored only as a salted cryptographic hash, never in plain text. Backup codes and security-question answers are also stored hashed.</p>
+<p><b>Your stamps:</b> the photos you turn into stamps are uploaded to our cloud photo storage (Cloudinary) so they stay backed up and available when you log in. Stamp details — collection name, date and caption — are stored with your account on our server.</p>
+<p><b>On your device:</b> collections, scrapbook projects and letters are kept in your browser's local storage on your device.</p>
+<h4>2. Why we use it</h4>
+<p>Only to run Snapmark for you: signing you in, saving and showing your stamps, backing them up, and keeping your account secure. We do not sell your data, we do not show ads, and we do not use advertising trackers.</p>
+<h4>3. Who can see your photos</h4>
+<p>Your stamps are private to your account. Photos are reachable only through their cloud links; they are never published or shared with other users by us.</p>
+<h4>4. Keeping data safe</h4>
+<p>Passwords and recovery codes are hashed, sign-in sessions use signed tokens, and sign-in attempts are rate-limited. No system is perfect, but we work to keep your corner of Snapmark secure.</p>
+<h4>5. Your choices</h4>
+<p>You can change your password, security question and backup codes any time in Settings. You may ask us to delete your account and its data — write to us from the email address linked to your account and we will remove your account details and stored stamps.</p>
+<h4>6. Changes</h4>
+<p>If this policy changes in a big way, we will note it here with a new date.</p>`;
+const TERMS_HTML = `<p>${LEGAL_UPDATED}</p>
+<h4>1. The service</h4>
+<p>Snapmark turns your photos into collectible digital stamps that you can organise into collections, scrapbooks and letters. By creating an account you accept these terms.</p>
+<h4>2. Your account</h4>
+<p>You are responsible for your account and for keeping your password and backup codes safe. One person per account. You must be old enough to use online services in your country, or have a parent or guardian's permission.</p>
+<h4>3. Your photos, your rights</h4>
+<p>You keep full ownership of every photo you upload. You give us only the permission needed to store, back up and display your stamps back to you inside the app.</p>
+<h4>4. Fair use</h4>
+<p>Do not upload content you have no right to use, content that is illegal, or content meant to harm others. Do not try to break, overload or sneak into parts of the service that are not yours. Accounts that break these rules may be suspended.</p>
+<h4>5. Availability</h4>
+<p>We work hard to keep Snapmark running, but the service is provided "as is" and may occasionally be unavailable or change. Keep your own copies of photos that matter to you.</p>
+<h4>6. Liability</h4>
+<p>To the extent allowed by law, we are not liable for indirect losses arising from use of the service. Nothing in these terms removes rights you have under applicable law.</p>
+<h4>7. Changes</h4>
+<p>We may update these terms; the new date will appear at the top. Continuing to use Snapmark after a change means you accept the updated terms.</p>`;
+function openLegal(kind){
+  $('#legalTitle').textContent = kind==='terms' ? 'Terms & Conditions' : 'Privacy Policy';
+  $('#legalBody').innerHTML = kind==='terms' ? TERMS_HTML : PRIVACY_HTML;
+  $('#legalBody').scrollTop = 0;
+  $('#legalView').classList.add('on');
+}
+$('#legalBack').onclick=()=>$('#legalView').classList.remove('on');
+$('#legalPrivacyBtn').onclick=()=>openLegal('privacy');
+$('#legalTermsBtn').onclick=()=>openLegal('terms');
+$('#suPrivacyLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('privacy'); };
+$('#suTermsLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('terms'); };
+$('#suAgree').onchange=e=>$('#otpBtn').classList.toggle('dim', !e.target.checked);
 
 /* ===== APP TOUR ===== */
 const TOUR_STEPS=[
