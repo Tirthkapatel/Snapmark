@@ -271,7 +271,7 @@ const actions = {
     if (!validUsername(uname)) return { ok: false, error: 'Please choose a valid username (3-20 characters: letters, numbers, dot or underscore)' };
     if (await usernameTaken(uname)) return { ok: false, error: 'That username is taken — please try another' };
     if (!validEmail(email) || isTempMail(email)) return { ok: false, error: 'Enter a valid email address' };
-    if ((password || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if ((password || '').length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
     if (await one('SELECT id FROM users WHERE email=?', [email]))
       return { ok: false, error: 'An account with this email already exists — please log in' };
     const err = await checkOtp(email, 'signup', code);
@@ -307,7 +307,7 @@ const actions = {
 
   async resetPassword({ email, code, newPassword }) {
     email = (email || '').trim().toLowerCase();
-    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if ((newPassword || '').length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
     const err = await checkOtp(email, 'reset', code);
     if (err) return { ok: false, error: err };
     await run('UPDATE users SET pass_hash=? WHERE email=?', [hashPassword(newPassword), email]);
@@ -414,7 +414,7 @@ const actions = {
 
   async resetWithBackupCode({ email, code, newPassword }) {
     email = (email || '').trim().toLowerCase();
-    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if ((newPassword || '').length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
     if (await recFailCount(email) >= 10) return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
     const user = await one('SELECT * FROM users WHERE email=?', [email]);
     const row = user && await one('SELECT * FROM backup_codes WHERE user_id=? AND code_hash=? AND used_at IS NULL',
@@ -453,7 +453,7 @@ const actions = {
 
   async resetWithAnswer({ email, answer, newPassword }) {
     email = (email || '').trim().toLowerCase();
-    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if ((newPassword || '').length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
     if (await recFailCount(email) >= 10) return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
     const user = await one('SELECT id FROM users WHERE email=?', [email]);
     const sq = user && await one('SELECT * FROM security_q WHERE user_id=?', [user.id]);
@@ -471,7 +471,7 @@ const actions = {
   async changePassword({ token, currentPassword, newPassword }) {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Login required' };
-    if ((newPassword || '').length < 6) return { ok: false, error: 'Password must be at least 6 characters' };
+    if ((newPassword || '').length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
     const user = await one('SELECT * FROM users WHERE id=?', [data.uid]);
     if (!user || !verifyPassword(currentPassword || '', user.pass_hash))
       return { ok: false, error: 'Current password is incorrect' };

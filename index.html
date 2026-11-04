@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Snapmark — Snap & Collect</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2048%2048%27%3E%3Cg%20transform%3D%27rotate%28-4%2024%2024%29%27%3E%3Crect%20x%3D%276%27%20y%3D%276%27%20width%3D%2736%27%20height%3D%2736%27%20rx%3D%274%27%20fill%3D%27%23fffdf6%27%20stroke%3D%27%2326221c%27%20stroke-width%3D%272.2%27%2F%3E%3Crect%20x%3D%2710.5%27%20y%3D%2710.5%27%20width%3D%2727%27%20height%3D%2727%27%20rx%3D%272.5%27%20fill%3D%27none%27%20stroke%3D%27%23c96f2e%27%20stroke-width%3D%271.6%27%20stroke-dasharray%3D%273.2%202.6%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2724%27%20r%3D%278.6%27%20fill%3D%27none%27%20stroke%3D%27%2326221c%27%20stroke-width%3D%272.2%27%2F%3E%3Cpath%20d%3D%27M24%2015.4%20L24%2021%20M31.5%2019.7%20L26.8%2022.4%20M31.5%2028.3%20L26.8%2025.6%20M24%2032.6%20L24%2027%20M16.5%2028.3%20L21.2%2025.6%20M16.5%2019.7%20L21.2%2022.4%27%20stroke%3D%27%2326221c%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20fill%3D%27none%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Caveat:wght@600;700&family=Shadows+Into+Light&family=Gochi+Hand&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -677,6 +678,15 @@
   .suggChip small, .notifItem .nx, .notifItem .nw, .stampStrip .ssNone{ color:#6f6a5e; font-weight:500; }
   .fLab, .otpPanelCap{ color:#6f6a5e; }
 
+  /* ===== v37 AUTH/BRAND POLISH ===== */
+  #authScreen .postmark{ top:-14px; right:-8px; width:72px; height:72px; z-index:0; }
+  .fld.bad{ border-color:#d2452c !important; box-shadow:0 0 0 3px rgba(210,69,44,.16); }
+  .agreeRow.bad{ color:#b3372a; }
+  .agreeRow.bad input{ outline:2px solid rgba(210,69,44,.55); outline-offset:1px; }
+  .authErr:empty{ min-height:0; margin-top:2px; }
+  .authOtpLine{ font-size:11px; }
+  #filmLogo{ letter-spacing:3px; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -775,7 +785,7 @@
           <div id="filmFrame">
             <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#a4936d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>your stamp here</span><span class="startCamPill">Start camera</span></div></div><div class="perfCut"></div></div>
           </div>
-          <div id="filmLogo">S N A P M A R K</div>
+          <div id="filmLogo">Snapmark</div>
         </div>
         <img id="ejectImg" alt="">
       </div>
@@ -917,7 +927,7 @@
           <div class="fLab">Current password</div>
           <input class="fld" id="cpCur" type="password" placeholder="Current password">
           <div class="fLab">New password</div>
-          <input class="fld" id="cpNew" type="password" placeholder="At least 6 characters">
+          <input class="fld" id="cpNew" type="password" placeholder="Create a new password">
           <button class="bigBtn" id="cpBtn">Change password</button>
           <div class="authErr" id="cpErr"></div>
         </div>
@@ -1029,13 +1039,14 @@
 
   <!-- AUTH -->
   <div id="authScreen">
-    <svg class="aMark" viewBox="0 0 48 48" fill="none" stroke="#26221c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="34" height="34" rx="5" stroke-dasharray="5.5 4.5"/><path d="M14 31l6.5-6.5 4.5 4.5 3.5-3.5L34 31z"/><circle cx="19" cy="17.5" r="2.2"/></svg>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="stampMark" viewBox="0 0 48 48"><g transform="rotate(-4 24 24)"><rect x="6" y="6" width="36" height="36" rx="4" fill="#fffdf6" stroke="#26221c" stroke-width="2.2"/><rect x="10.5" y="10.5" width="27" height="27" rx="2.5" fill="none" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.2 2.6"/><circle cx="24" cy="24" r="8.6" fill="none" stroke="#26221c" stroke-width="2.2"/><path d="M24 15.4 L24 21 M31.5 19.7 L26.8 22.4 M31.5 28.3 L26.8 25.6 M24 32.6 L24 27 M16.5 28.3 L21.2 25.6 M16.5 19.7 L21.2 22.4" stroke="#26221c" stroke-width="2" stroke-linecap="round" fill="none"/></g></symbol></defs></svg>
+    <svg class="aMark" aria-hidden="true"><use href="#stampMark"></use></svg>
     <div class="aLogo">Snap<span>mark</span></div>
     <div class="aTag">Your stamps, safe in your account.</div>
 
     <div id="viewLogin">
       <div class="stampCard">
-        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmA" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmA">SNAPMARK • POST • EST 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmA" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmA">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
         <div class="authTabs"><div id="tabLogin" class="sel">Log in</div><div id="tabSignup">Sign up</div></div>
         <div class="fLab">Email</div>
         <input class="fld" id="liEmail" type="email" placeholder="you@example.com" autocomplete="email">
@@ -1050,7 +1061,7 @@
 
     <div id="viewSignup" style="display:none">
       <div class="stampCard">
-        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmB" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmB">SNAPMARK • POST • EST 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmB" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmB">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
         <div class="authTabs"><div id="tabLogin2">Log in</div><div id="tabSignup2" class="sel">Sign up</div></div>
         <div class="fLab">Your name</div>
         <input class="fld" id="suName" type="text" placeholder="Full name" autocomplete="name">
@@ -1060,11 +1071,11 @@
         <div class="fLab">Email</div>
         <input class="fld" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
         <div class="fLab">Password</div>
-        <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
+        <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="Create a password" autocomplete="new-password"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
         <div class="strength" id="strengthBar"><i></i><i></i><i></i><i></i></div>
-        <div class="strengthTxt" id="strengthTxt">Use 6+ characters with numbers or symbols for a stronger password.</div>
+        <div class="strengthTxt" id="strengthTxt">Use 8+ characters with numbers or symbols for a stronger password.</div>
         <label class="agreeRow"><input type="checkbox" id="suAgree"><span>I agree to the <a id="suTermsLink">Terms &amp; Conditions</a> and the <a id="suPrivacyLink">Privacy Policy</a> of Snapmark.</span></label>
-        <button class="authBtn dim" id="otpBtn">Continue →</button>
+        <button class="authBtn" id="otpBtn">Continue →</button>
         <div class="authErr" id="signupErr"></div>
       </div>
     </div>
@@ -1086,7 +1097,7 @@
         <div class="otpHead" style="font-size:25px">Set a new password</div>
         <p class="otpSub">Code verified ✓ — now choose your new password.</p>
         <div class="fLab">New password</div>
-        <div class="fWrap"><input class="fld" id="rsPass" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button class="eyeBtn" data-eye="rsPass" type="button">👁</button></div>
+        <div class="fWrap"><input class="fld" id="rsPass" type="password" placeholder="Create a new password" autocomplete="new-password"><button class="eyeBtn" data-eye="rsPass" type="button">👁</button></div>
         <button class="authBtn" id="rsBtn">Save new password</button>
         <div class="authErr" id="newPassErr"></div>
       </div>
@@ -1100,7 +1111,7 @@
         <div class="otpBoxes" id="otpBoxes">
           <input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric"><input class="otpBox" maxlength="1" inputmode="numeric">
         </div>
-        <div class="otpPanelCap">S N A P M A R K • A I R &nbsp; M A I L</div>
+        <div class="otpPanelCap">Snapmark • Air Mail</div>
       </div>
       <div class="authErr" id="otpErr"></div>
       <div class="authMsg" id="otpMsg"></div>
@@ -1131,7 +1142,7 @@
         <div class="fLab">Backup code</div>
         <input class="fld" id="rbCode" type="text" placeholder="e.g. 3BTT-U277" autocomplete="off" style="text-transform:uppercase;letter-spacing:1.5px">
         <div class="fLab">New password</div>
-        <input class="fld" id="rbPass" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+        <input class="fld" id="rbPass" type="password" placeholder="Create a new password" autocomplete="new-password">
         <button class="authBtn" id="rbBtn">Set new password</button>
         <div class="linkRow left"><a id="rbBack">← Back</a></div>
         <div class="authErr" id="rbErr"></div>
@@ -1151,7 +1162,7 @@
           <div class="fLab">Your answer</div>
           <input class="fld" id="rqAnswer" type="text" placeholder="Your answer">
           <div class="fLab">New password</div>
-          <input class="fld" id="rqPass" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+          <input class="fld" id="rqPass" type="password" placeholder="Create a new password" autocomplete="new-password">
           <button class="authBtn" id="rqBtn">Set new password</button>
         </div>
         <div class="linkRow left"><a id="rqBack">← Back</a></div>
@@ -1178,7 +1189,7 @@
       </div>
     </div>
 
-    <div class="authNote">Protected by email OTP verification.<br>Passwords are stored securely hashed — never in plain text.</div>
+    <div class="authNote">Your stamps are private and encrypted.<br><span class="authOtpLine">New accounts are verified with a quick email code.</span></div>
   </div>
 
   <!-- ACCOUNT SHEET -->
@@ -1248,9 +1259,22 @@ function syncStamp(rec){ if(session && rec.cloud) api('saveStamp', { token: sess
 let otpCtx = { mode:'signup', email:'' };
 let resendTimerInt = null;
 function authView(v){
+  const tgtId='view'+v[0].toUpperCase()+v.slice(1);
+  const cur=[...document.querySelectorAll('#authScreen > div[id^="view"]')].find(e=>e.style.display!=='none');
+  const oldCard = cur && cur.id!==tgtId ? cur.querySelector('.stampCard') : null;
+  const oldH = oldCard ? oldCard.getBoundingClientRect().height : 0;
   ['viewLogin','viewSignup','viewResetEmail','viewNewPass','viewOtp','viewBackupLogin','viewResetBackup','viewResetQuestion','viewSetup'].forEach(id=>{ document.getElementById(id).style.display='none'; });
-  document.getElementById('view'+v[0].toUpperCase()+v.slice(1)).style.display='block';
+  document.getElementById(tgtId).style.display='block';
   $('#authScreen').classList.toggle('otpMode', v==='otp');
+  const newCard=document.getElementById(tgtId).querySelector('.stampCard');
+  if(oldCard && newCard && oldH && !document.documentElement.classList.contains('lite')){
+    const natH=newCard.getBoundingClientRect().height;
+    if(Math.abs(natH-oldH)>4){
+      newCard.style.height=oldH+'px'; newCard.style.overflow='hidden';
+      requestAnimationFrame(()=>{ newCard.style.transition='height .35s cubic-bezier(.32,.72,0,1)'; newCard.style.height=natH+'px';
+        setTimeout(()=>{ newCard.style.height=''; newCard.style.transition=''; newCard.style.overflow=''; }, 390); });
+    }
+  }
 }
 $('#tabLogin').onclick=()=>authView('login');
 $('#tabSignup').onclick=()=>authView('signup');
@@ -1345,19 +1369,38 @@ otpBoxesEl.forEach((box,i)=>{
 const otpValue=()=>otpBoxesEl.map(b=>b.value).join('');
 $('#suPass').addEventListener('input', ()=>{
   const v=$('#suPass').value; let s=0;
-  if(v.length>=6) s++; if(v.length>=10) s++; if(/\d/.test(v)) s++; if(/[^A-Za-z0-9]/.test(v)) s++;
-  const cols=['#d9534f','#e9a13b','#e9a13b','#4c9a52'];
+  if(v.length>=8) s++; if(v.length>=12) s++; if(/\d/.test(v)) s++; if(/[^A-Za-z0-9]/.test(v) || (/[a-z]/.test(v) && /[A-Z]/.test(v))) s++;
+  if(v && v.length<8) s=1;
+  const cols=['#d2452c','#e07b2a','#e07b2a','#3d8a44'];
   [...$('#strengthBar').children].forEach((bar,i)=>{ bar.style.background = i<s ? cols[s-1] : '#e9e2cf'; });
-  $('#strengthTxt').textContent = ['Too short — at least 6 characters.','Weak password.','Good password.','Strong password.','Excellent password.'][s] || '';
+  $('#strengthTxt').textContent = !v ? 'Use 8+ characters with numbers or symbols for a stronger password.'
+    : v.length<8 ? 'Too short — at least 8 characters.'
+    : ['','Weak password.','Good password.','Strong password.','Excellent password.'][s];
 });
 function setBusy(btn, busy, txt){ if(busy){ btn.dataset.old=btn.textContent; btn.textContent=txt; btn.disabled=true; } else { btn.textContent=btn.dataset.old||btn.textContent; btn.disabled=false; } }
 
+['suName','suUser','suEmail','suPass'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>el.classList.remove('bad')); });
 $('#otpBtn').onclick=async(e)=>{
-  if(!$('#suAgree').checked){ $('#signupErr').textContent='Please accept the Terms & Conditions and Privacy Policy to continue.'; $('#suAgree').focus(); return; }
-  if(!suUserOK){ $('#signupErr').textContent='Please choose an available username first.'; $('#suUser').focus(); return; }
-  const email=$('#suEmail').value.trim(), name=$('#suName').value.trim(), pass=$('#suPass').value;
-  if(name.length<2){ $('#signupErr').textContent='Please enter your name'; return; }
-  if(pass.length<6){ $('#signupErr').textContent='Password must be at least 6 characters'; return; }
+  const nameEl=$('#suName'), userEl=$('#suUser'), emailEl=$('#suEmail'), passEl=$('#suPass'), agreeEl=$('#suAgree');
+  const badName = nameEl.value.trim().length<2;
+  const badUser = !suUserOK;
+  const badEmail = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+  const badPass = passEl.value.length<8;
+  const badAgree = !agreeEl.checked;
+  nameEl.classList.toggle('bad', badName);
+  userEl.classList.toggle('bad', badUser);
+  emailEl.classList.toggle('bad', badEmail);
+  passEl.classList.toggle('bad', badPass);
+  agreeEl.closest('.agreeRow').classList.toggle('bad', badAgree);
+  const msgs=[];
+  if(badName) msgs.push('enter your name');
+  if(badUser) msgs.push('choose an available username');
+  if(badEmail) msgs.push('enter a valid email');
+  if(badPass) msgs.push('use a password of 8+ characters');
+  if(badAgree) msgs.push('accept the Terms & Privacy Policy');
+  if(msgs.length){ $('#signupErr').textContent='Please ' + msgs.join(', ') + '.'; ([nameEl,userEl,emailEl,passEl].find(el=>el.classList.contains('bad')) || agreeEl).focus(); return; }
+  $('#signupErr').textContent='';
+  const email=emailEl.value.trim(), name=nameEl.value.trim(), pass=passEl.value;
   setBusy(e.target, true, 'Sending code…');
   const r=await api('requestSignupOtp', { email });
   setBusy(e.target, false);
@@ -1596,7 +1639,7 @@ function makeStamp(el, isVideo, style){
   cropDraw(x, el, isVideo, B, B, pW, pH, zoom);
   if(style==='template'){
     x.strokeStyle='#b3372a'; x.lineWidth=5; rr(x,B-11,B-11,pW+22,pH+22,5); x.stroke();
-    x.fillStyle='#b3372a'; x.font='900 24px Inter'; x.textAlign='left'; x.fillText('SNAPMARK', B-4, 42);
+    x.fillStyle='#b3372a'; x.font='900 24px Inter'; x.textAlign='left'; x.fillText('Snapmark', B-4, 42);
     x.textAlign='right'; x.fillText('1₹', W-B+4, 42);
     x.font='600 18px Inter'; x.fillStyle='#8a7f63'; x.textAlign='center';
     x.fillText('· snap · collect · remember ·', W/2, c.height-20);
@@ -2501,7 +2544,7 @@ $('#legalPrivacyBtn').onclick=()=>openLegal('privacy');
 $('#legalTermsBtn').onclick=()=>openLegal('terms');
 $('#suPrivacyLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('privacy'); };
 $('#suTermsLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLegal('terms'); };
-$('#suAgree').onchange=e=>$('#otpBtn').classList.toggle('dim', !e.target.checked);
+$('#suAgree').addEventListener('change', e=>{ e.target.closest('.agreeRow').classList.remove('bad'); });
 let suUserOK=false, suUserTimer=null;
 $('#suUser').addEventListener('input', ()=>{
   const u=$('#suUser').value.trim().replace(/^@+/,'').toLowerCase();
