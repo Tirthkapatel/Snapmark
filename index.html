@@ -503,7 +503,7 @@
   @keyframes pasteIn{ 0%{ transform:scale(1.3) rotate(-7deg); opacity:0; } 100%{ transform:none; opacity:1; } }
   .calGrid .cell.today.noStamp{ animation:cellIn .3s ease backwards, todayPulse 2s ease-in-out infinite; }
   @keyframes todayPulse{ 0%,100%{ box-shadow:inset 0 0 0 2px rgba(201,111,46,.35); } 50%{ box-shadow:inset 0 0 0 2.5px rgba(201,111,46,.95); } }
-  .emptyNote .big{ display:inline-block; animation:floaty 3s ease-in-out infinite; }
+  .emptyNote .big{ display:block; margin-bottom:8px; animation:floaty 3s ease-in-out infinite; }
   @keyframes floaty{ 0%,100%{ transform:translateY(-4px); } 50%{ transform:translateY(4px); } }
   .skelStamp{ height:86px; border-radius:12px; border:2px dashed #ddd3ba; margin-bottom:10px; position:relative; overflow:hidden; background:#f3edda; }
   .skelStamp::after{ content:''; position:absolute; inset:0; background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%); animation:shimmer 1.3s infinite; transform:translateX(-100%); }
