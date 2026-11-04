@@ -764,6 +764,12 @@
   .stampIllo{ width:76px; height:76px; margin-bottom:8px; }
   #gridEmpty{ cursor:pointer; }
 
+  /* ===== v44 SHUTTER CENTER ===== */
+  .shutterRow{ display:grid; grid-template-columns:1fr auto 1fr; }
+  .shutterRow .galBtn{ justify-self:start; }
+  .shutterRow #shutter{ justify-self:center; }
+  .shutterRow .zoomSel{ justify-self:end; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
