@@ -141,6 +141,8 @@ function ensureSchema() {
     try { await db.execute("ALTER TABLE users ADD COLUMN provider TEXT DEFAULT 'email'"); } catch (e) {}
     try { await db.execute('ALTER TABLE users ADD COLUMN wa_cred TEXT'); } catch (e) {}
     try { await db.execute('CREATE TABLE IF NOT EXISTS wa_chal (k TEXT PRIMARY KEY, challenge TEXT, exp INTEGER)'); } catch (e) {}
+    try { await db.execute('ALTER TABLE users ADD COLUMN invite_token TEXT'); } catch (e) {}
+    try { await db.execute('CREATE TABLE IF NOT EXISTS invite_claims (id INTEGER PRIMARY KEY AUTOINCREMENT, inviter INTEGER, claimer INTEGER UNIQUE, ts INTEGER)'); } catch (e) {}
     await backfillUsernames();
   })().catch(e => { schemaReady = null; throw e; });
   return schemaReady;
@@ -562,6 +564,29 @@ const actions = {
   },
 
   /* ----- usernames + letters (asli delivery, server par) ----- */
+  async inviteLink({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const u = await one('SELECT id, invite_token FROM users WHERE id=?', [data.uid]);
+    let t = u && u.invite_token;
+    if (!t) { t = require('crypto').randomBytes(14).toString('hex'); await run('UPDATE users SET invite_token=? WHERE id=?', [t, data.uid]); }
+    const c = await one('SELECT COUNT(*) AS n FROM invite_claims WHERE inviter=?', [data.uid]);
+    return { ok: true, inviteToken: t, joined: c ? Number(c.n) : 0 };
+  },
+  async inviteInfo({ inviteToken }) {
+    if (!inviteToken) return { ok: false };
+    const u = await one('SELECT username FROM users WHERE invite_token=?', [String(inviteToken).slice(0, 64)]);
+    if (!u) return { ok: false };
+    return { ok: true, username: u.username };
+  },
+  async claimInvite({ token, inviteToken }) {
+    const data = readToken(token);
+    if (!data || !inviteToken) return { ok: false };
+    const inv = await one('SELECT id, username FROM users WHERE invite_token=?', [String(inviteToken).slice(0, 64)]);
+    if (!inv || inv.id === data.uid) return { ok: false };
+    await run('INSERT OR IGNORE INTO invite_claims (inviter, claimer, ts) VALUES (?,?,?)', [inv.id, data.uid, Date.now()]);
+    return { ok: true, inviter: inv.username };
+  },
   async setName({ token, name }) {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Login required' };
@@ -734,11 +759,12 @@ async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-  if (req.method === 'GET' && (req.url === '/health' || req.url === '/api/health')) {
+  const pathOnly = (req.url || '').split('?')[0];
+  if (req.method === 'GET' && (pathOnly === '/health' || pathOnly === '/api/health')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, app: 'snapmark-server' }));
   }
-  if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+  if (req.method === 'GET' && (pathOnly === '/' || pathOnly === '/index.html')) {
     try {
       const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

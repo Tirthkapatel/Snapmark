@@ -755,6 +755,15 @@
   #bookCtaBar.on{ display:block; }
   #bookCtaBar .bigBtn{ margin-top:0; box-shadow:0 12px 26px rgba(23,21,15,.28); }
 
+  /* ===== v43 INVITE + GOOGLE BTN + MISC ===== */
+  .gBtnSlot{ height:52px; display:flex; align-items:center; justify-content:center; }
+  .agreeRow{ min-height:48px; padding:12px 4px; }
+  .agreeRow input{ width:22px; height:22px; }
+  .joinNote{ display:none; background:#fdf3e3; border:1.5px dashed #d9b96a; color:#7a5b12; font-size:13px; font-weight:600; line-height:1.5; border-radius:12px; padding:10px 12px; margin-bottom:12px; text-align:center; }
+  .joinNote.on{ display:block; }
+  .stampIllo{ width:76px; height:76px; margin-bottom:8px; }
+  #gridEmpty{ cursor:pointer; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -900,7 +909,7 @@
         <button id="mgMoveBtn">Move to</button><button type="button" class="ddBtn" id="mgMoveSel">My Collection ▾</button>
         <button id="mgDelBtn" class="danger">Delete</button>
         <button id="mgDoneBtn">Done</button></div>
-      <div class="scroll"><div id="stampGrid"></div><div class="emptyNote" id="gridEmpty" style="display:none"><span class="big">nothing here yet</span>No stamps in this collection yet.</div></div>
+      <div class="scroll"><div id="stampGrid"></div><div class="emptyNote" id="gridEmpty" style="display:none"><svg class="stampIllo" viewBox="0 0 96 96" aria-hidden="true"><rect x="10" y="14" width="76" height="68" rx="7" fill="none" stroke="#c9bfa8" stroke-width="3" stroke-dasharray="7 6"/><rect x="24" y="27" width="48" height="42" rx="4" fill="none" stroke="#ddd2b8" stroke-width="2.5"/><circle cx="48" cy="48" r="10.5" fill="none" stroke="#c96f2e" stroke-width="3"/><circle cx="48" cy="48" r="3.5" fill="#c96f2e"/></svg><span class="big">nothing here yet</span>Tap Camera to add your first stamp</div></div>
     </section>
 
     <!-- CALENDAR -->
@@ -1123,6 +1132,7 @@
     <div id="viewLogin">
       <div class="stampCard">
         <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmA" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmA">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <div class="joinNote" id="joinNoteLogin"></div>
         <div class="authTabs"><i class="tabThumb"></i><div id="tabLogin" class="sel">Log in</div><div id="tabSignup">Sign up</div></div>
         <div class="fLab">Email</div>
         <input class="fld" id="liEmail" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email" enterkeyhint="next">
@@ -1142,6 +1152,7 @@
     <div id="viewSignup" style="display:none">
       <div class="stampCard">
         <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmB" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmB">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
+        <div class="joinNote" id="joinNoteSignup"></div>
         <div class="authTabs"><i class="tabThumb"></i><div id="tabLogin2">Log in</div><div id="tabSignup2" class="sel">Sign up</div></div>
         <div class="fLab">Choose a username</div>
         <div class="fWrap"><span class="atPrefix">@</span><input class="fld atIn" id="suUser" type="text" placeholder="yourname" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next"></div>
@@ -1560,6 +1571,8 @@ function authSuccess(btn){ const card=visibleAuthCard(); if(!card || document.do
 async function enterApp(){
   $('#authScreen').style.display='none';
   if(!session) return;
+  const jt=localStorage.getItem('snapmark_join');
+  if(jt){ localStorage.removeItem('snapmark_join'); api('claimInvite', { token: session.token, inviteToken: jt }).then(r=>{ if(r && r.ok && r.inviter) toast('You joined via @'+r.inviter+'\u2019s invite 🎉'); }).catch(()=>{}); }
   maybePromptWa();
   requestAnimationFrame(()=>setNav(curNav));
   $('#avatarBtn').textContent=(session.user.name||'S').trim()[0].toUpperCase();
@@ -1946,7 +1959,7 @@ function renderCalendar(){
     const base=new Date(cy, cm+off, 1), y=base.getFullYear(), m=base.getMonth();
     const block=document.createElement('div'); block.className='calMonthBlock'; block.dataset.y=y; block.dataset.m=m;
     const cnt=Object.keys(byDay).filter(k=>{ const p=k.split('-'); return +p[0]===y && +p[1]===m+1; }).reduce((a,k)=>a+byDay[k].length,0);
-    block.innerHTML=`<div class="calMonth"><span>${MNAMES[m]} ${y}</span><span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
+    block.innerHTML=`<div class="calMonth"><span>${MNAMES[m]} ${y}</span>${cnt ? '<span class="days">' + stampWord(cnt) + '</span>' : '<span></span>'}</div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
     const grid=document.createElement('div'); grid.className='calGrid';
     let cellIdx=0;
     const cell=(yy,mm,d,dim,isToday)=>{
@@ -1956,7 +1969,7 @@ function renderCalendar(){
       c.innerHTML=`<span>${d}</span>`;
       if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; im.className='pasteImg'; im.style.setProperty('--rot', ROTS[cellIdx%4]+'deg'); im.style.animationDelay=(0.05+((cellIdx%14)*0.018))+'s'; c.appendChild(im); }
       else if(isToday){ const pl=document.createElement('span'); pl.className='plusHint'; pl.textContent='+'; c.appendChild(pl); }
-      c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
+      c.onclick=()=>{ if(isToday && !byDay[key]) showScreen('camScreen'); else openSheet(new Date(yy,mm,d), byDay[key]||[]); };
       return c;
     };
     const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), pdays=new Date(y,m,0).getDate();
@@ -2020,6 +2033,7 @@ function createFromTemplate(key){
   toast('Project created 📖');
 }
 $('#ctaNewProj').onclick=()=>newProjectFlow();
+$('#gridEmpty').onclick=()=>showScreen('camScreen');
 function renderProjects(){
   renderBookLine();
   const npb=$('#newProjBtn'); if(npb) npb.style.display = projects.length ? '' : 'none';
@@ -2293,11 +2307,12 @@ async function renderLetters(){
   const ib=$('#inviteBtn'); if(ib) ib.onclick=inviteFriend;
 }
 async function inviteFriend(){
-  const un = session && session.user.username ? '@'+session.user.username : 'me';
-  const text = 'Join me on Snapmark 📮 \u2014 we can send each other letters! My username is '+un+'. Join here: ' + location.origin + '/';
+  let link = location.origin + '/';
+  try{ const r = await api('inviteLink', { token: session.token }); if(r.ok && r.inviteToken) link = location.origin + '/?join=' + r.inviteToken; }catch(e){}
+  const text = 'Join me on Snapmark 📮 \u2014 we can send each other letters & stamps! Join with my personal link: ' + link;
   if(navigator.share){ try{ await navigator.share({ title:'Snapmark', text }); return; }catch(e){ if(e && e.name==='AbortError') return; } }
   try{ await navigator.clipboard.writeText(text); toast('Invite copied \u2014 paste it anywhere to share 📮'); }
-  catch(e){ toast('Share your username '+un+' with a friend'); }
+  catch(e){ toast('Could not copy \u2014 long-press the link to copy it'); }
 }
 async function composeLetter(){
   const httpStamps = stamps.filter(x=>typeof x.img==='string' && x.img.startsWith('http'));
@@ -2510,6 +2525,7 @@ fillCollSelects(); renderFolders();
 { const _wb=$('#waLoginBtn'); if(_wb) _wb.onclick=waLogin;
   const _le=localStorage.getItem('snapmark_last_email'); if(_le && !$('#liEmail').value) $('#liEmail').value=_le;
   refreshWaLoginBtn(); }
+(function(){ const j=new URLSearchParams(location.search).get('join'); if(j){ localStorage.setItem('snapmark_join', j); history.replaceState(null, '', location.pathname); api('inviteInfo', { inviteToken: j }).then(r=>{ if(r && r.ok && r.username){ const msg='🎉 <b>@'+r.username+'</b> invited you to Snapmark \u2014 join and send each other letters & stamps!'; ['joinNoteLogin','joinNoteSignup'].forEach(id=>{ const n=document.getElementById(id); if(n){ n.innerHTML=msg; n.classList.add('on'); } }); } }).catch(()=>{}); } })();
 if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
 
 function playSendFx(msg){
@@ -2757,8 +2773,10 @@ function initGoogle(){
   if(!GOOGLE_CLIENT_ID || !window.google || !google.accounts || !google.accounts.id) return;
   document.querySelectorAll('.gWrap').forEach(w=>w.style.display='');
   google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
+  const gwSlot=document.getElementById('gBtnLogin');
+  const gw = gwSlot ? Math.min(400, Math.max(200, Math.round(gwSlot.getBoundingClientRect().width) || 300)) : 300;
   ['gBtnLogin','gBtnSignup'].forEach(id=>{ const el=document.getElementById(id);
-    if(el) google.accounts.id.renderButton(el, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width:250 }); });
+    if(el) google.accounts.id.renderButton(el, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width:gw }); });
 }
 if(GOOGLE_CLIENT_ID){ const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.defer=true; sc.onload=initGoogle; document.head.appendChild(sc); }
 
