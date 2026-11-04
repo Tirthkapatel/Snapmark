@@ -651,6 +651,17 @@
   .handleChip button{ border:none; background:#23211c; color:#f5efdd; font-family:'Inter',sans-serif; font-weight:800; font-size:11.5px; padding:6px 13px; border-radius:99px; cursor:pointer; flex:0 0 auto; }
   .handleChip button:active{ transform:scale(.94); }
 
+  /* ===== CAMERA/COLLECTIONS v34 ===== */
+  .camBottom{ bottom:114px; }
+  #mediaBox .fvEmpty{ flex-direction:column; gap:9px; }
+  .startCamPill{ font-family:'Inter',sans-serif; font-size:12.5px; font-weight:800; background:#23211c; color:#f5efdd; padding:8px 18px; border-radius:99px; box-shadow:0 6px 16px rgba(20,18,12,.3); letter-spacing:.2px; }
+  #cutterDots{ gap:8px; }
+  #cutterDots i{ width:9px; height:9px; background:rgba(240,234,214,.38); border:1.6px solid rgba(240,234,214,.55); }
+  #cutterDots i.on{ background:#f0ead6; border-color:#f0ead6; transform:scale(1.3); }
+  #collScreen .avatar{ background:linear-gradient(135deg,#e07840,#c9501f); border-color:rgba(255,255,255,.65); box-shadow:0 5px 14px rgba(201,80,31,.35); }
+  #collScreen .headRow{ gap:12px; }
+  #collScreen .iconGroup{ margin-left:6px; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -740,14 +751,14 @@
         <button type="button" class="darkPill ddBtn" id="collPill" style="flex:0 1 auto">My Collection ▾</button>
         <div style="flex:1"></div>
         <div class="roundDark" id="flashBtn" title="Flash"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/><path class="slash" d="M4 4l16 16" stroke="#ff7a5c"/></svg></div>
-        <div class="roundDark" id="flipBtn" title="Switch camera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></div>
+        <div class="roundDark" id="flipBtn" title="Switch camera"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="12.5" rx="2.5"/><path d="M8.5 7l1.6-2.5h3.8L15.5 7"/><path d="M8.9 11.3a3.4 3.4 0 0 1 5.8-.7"/><path d="M15.1 8.2v2.5h-2.5"/><path d="M15.1 15.2a3.4 3.4 0 0 1-5.8.7"/><path d="M8.9 18.3v-2.5h2.5"/></svg></div>
       </div>
       <div class="camHint">Swipe up or down to change cutter</div>
       <div id="cutterDots"><i class="on"></i><i></i><i></i></div>
       <div id="cutterWrap">
         <div id="metal">
           <div id="filmFrame">
-            <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty">tap to start camera</div></div><div class="perfCut"></div></div>
+            <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#a4936d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>your stamp here</span><span class="startCamPill">Start camera</span></div></div><div class="perfCut"></div></div>
           </div>
           <div id="filmLogo">S N A P M A R K</div>
         </div>
