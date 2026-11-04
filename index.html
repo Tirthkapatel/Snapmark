@@ -614,6 +614,36 @@
   .stkGrid span{ padding:7px 0; border-radius:10px; cursor:pointer; background:#faf6ea; font-size:25px; text-align:center; }
   .stkGrid span:active{ transform:scale(.9); }
 
+  /* ===== LETTERS v32 ===== */
+  .ltBtnRow{ display:flex; gap:9px; }
+  .ltBtnRow .bigBtn{ margin:0; width:auto; flex:1 1 0; }
+  .bigBtn.ghost{ background:#efe8d2; color:var(--ink); border:1.5px solid #ddd2b2; }
+  #letterBadge{ min-width:9px; width:9px; height:9px; padding:0; top:5px; right:7px; }
+  .envIllu{ width:96px; height:auto; }
+  .letterCard.paper-ruled{ background:repeating-linear-gradient(#fffdf6 0 25px, #e9e0c8 25px 26px); }
+  .letterCard.paper-vintage{ background:linear-gradient(135deg,#f2e0ba,#e7d09e); }
+  .letterCard.paper-dots{ background:radial-gradient(circle, #ddd2b2 1.3px, transparent 1.8px) 0 0/16px 16px, #fffdf6; }
+  .letterCard img{ border:3px solid #fff; box-shadow:0 3px 8px rgba(20,18,12,.2); transform:rotate(-3deg); border-radius:3px; background:#fff; }
+  .paperRow{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:2px 0 4px; }
+  .paperSw{ border:1.5px solid #ddd2b2; border-radius:10px; padding:9px 2px 7px; font-family:'Inter',sans-serif; font-weight:800; font-size:11px; color:var(--ink); cursor:pointer; background:#fffdf6; }
+  .paperSw.sel{ border-color:#c96f2e; box-shadow:0 0 0 2px rgba(201,111,46,.25); }
+  .paperSw.sw-ruled{ background:repeating-linear-gradient(#fffdf6 0 7px, #e9e0c8 7px 8px); }
+  .paperSw.sw-vintage{ background:linear-gradient(135deg,#f2e0ba,#e7d09e); }
+  .paperSw.sw-dots{ background:radial-gradient(circle, #ddd2b2 1.2px, transparent 1.7px) 0 0/9px 9px, #fffdf6; }
+  .stampStrip{ display:flex; gap:8px; overflow-x:auto; padding:4px 1px 8px; scrollbar-width:none; }
+  .stampStrip::-webkit-scrollbar{ display:none; }
+  .stampStrip .ssNone{ flex:0 0 auto; width:52px; height:64px; border:1.5px dashed #cfc4a2; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:800; color:#8b8779; cursor:pointer; background:#fffdf6; }
+  .stampStrip img{ flex:0 0 auto; width:52px; height:64px; object-fit:cover; border:3px solid #fff; box-shadow:0 2px 6px rgba(20,18,12,.18); border-radius:4px; cursor:pointer; transform:rotate(-2deg); }
+  .stampStrip .selPick{ outline:2.5px solid #c96f2e; outline-offset:1.5px; }
+  .sendPaper{ min-height:118px; width:204px; }
+  #sendFxTxt{ display:block; animation:txtOut .3s .35s forwards; }
+  @keyframes txtOut{ to{ opacity:0; } }
+  .fxEnvWrap{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(.7); opacity:0; animation:envIn .3s .42s cubic-bezier(.34,1.4,.64,1) forwards; pointer-events:none; }
+  @keyframes envIn{ to{ opacity:1; transform:translate(-50%,-50%) scale(1); } }
+  .fxSeal{ position:absolute; left:50%; top:58%; transform:translate(-50%,-50%) scale(0); font-size:21px; animation:sealIn .28s .78s cubic-bezier(.34,1.56,.64,1) forwards; }
+  @keyframes sealIn{ to{ transform:translate(-50%,-50%) scale(1); } }
+  .sendPaper .fxStamp{ animation-delay:.62s; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -956,7 +986,7 @@
   </div></div>
 
   <!-- LETTER SEND FX -->
-  <div id="sendFx"><div class="sendPaper"><span id="sendFxTxt"></span><span class="fxEnv">✉️</span><span class="fxStamp">💮</span></div></div>
+  <div id="sendFx"><div class="sendPaper"><span id="sendFxTxt"></span><span class="fxEnvWrap"><svg viewBox="0 0 120 84" width="128" height="90"><rect x="4" y="14" width="112" height="66" rx="6" fill="#f3e5c0" stroke="#d8c491" stroke-width="2"/><path d="M6 18 L60 54 L114 18" fill="none" stroke="#d8c491" stroke-width="2.5"/><path d="M4 15 L60 52 L116 15 L116 14 L4 14 Z" fill="#ecd9a8"/></svg><span class="fxSeal">❤</span></span><span class="fxStamp">💮</span></div></div>
 
   <!-- LEGAL VIEW (privacy / terms) -->
   <div id="legalView">
@@ -2026,7 +2056,7 @@ $('#edTape').onclick=()=>{ if(curProj) placeEl({ type:'tape', style:Math.floor(M
 
 /* ---------- letters (server delivery — asli kaam) ---------- */
 let letterData={ received:[], sent:[] };
-function setLetterBadge(n){ const b=$('#letterBadge'); if(!b) return; b.textContent=n; b.classList.toggle('on', n>0); }
+function setLetterBadge(n){ const b=$('#letterBadge'); if(!b) return; b.textContent=''; b.classList.toggle('on', n>0); }
 function fmtDay(ts){ return new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); }
 const escH=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 async function renderLetters(){
@@ -2043,27 +2073,55 @@ async function renderLetters(){
   if(r.ok) letterData={ received:r.received, sent:r.sent };
   let html='';
   if(letterTab==='recv'){
-    html+=`<button class="bigBtn" id="writeBtn">✍️ Write a letter</button>`;
-    if(!letterData.received.length) html+=`<div class="emptyNote" style="padding-top:34px"><span class="big">no letters yet</span>When a friend sends you a letter on your @handle, it will arrive here.</div>`;
+    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1">✍️ Write a letter</button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
+    if(!letterData.received.length) html+=`<div class="emptyNote" style="padding-top:30px"><span class="big" style="display:block"><svg class="envIllu" viewBox="0 0 120 94"><rect x="86" y="4" width="24" height="29" rx="2" fill="#fff" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.5 2.5"/><rect x="90.5" y="8.5" width="15" height="20" fill="#ffd9c4"/><path d="M98 13l1.7 3.4 3.8.6-2.7 2.7.6 3.8L98 21.7l-3.4 1.8.6-3.8-2.7-2.7 3.8-.6z" fill="#c96f2e"/><rect x="8" y="30" width="104" height="58" rx="7" fill="#f8eed3" stroke="#dcc794" stroke-width="2"/><path d="M8 34 L60 68 L112 34" fill="none" stroke="#dcc794" stroke-width="2"/><path d="M8 31 L60 64 L112 31 L112 30 L8 30 Z" fill="#efdfba"/><text x="60" y="82" font-size="15" text-anchor="middle">❤</text></svg></span><span class="big" style="display:block;font-size:22px;margin-top:2px">no letters yet</span>When a friend sends you a letter on your @handle, it will arrive here. No friends on Snapmark yet? Invite one!</div>`;
     letterData.received.forEach(L=>{
-      html+=`<div class="letterCard ${L.read?'':'unread'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">From @${escH(L.fromUsername)} (${escH(L.fromName)}) · ${fmtDay(L.ts)} ${L.read?'':'· <span class="newDot">● NEW</span>'}</div></div></div>`;
+      html+=`<div class="letterCard paper-${L.paper||'plain'} ${L.read?'':'unread'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">From @${escH(L.fromUsername)} (${escH(L.fromName)}) · ${fmtDay(L.ts)} ${L.read?'':'· <span class="newDot">● NEW</span>'}</div></div></div>`;
     });
     body.innerHTML=html;
     if(letterData.received.some(L=>!L.read)){ api('markLettersRead', { token: session.token }); setLetterBadge(0); letterData.received.forEach(L=>L.read=true); }
   } else {
-    html+=`<button class="bigBtn" id="writeBtn">✍️ Write a new letter</button>`;
-    if(!letterData.sent.length) html+=`<div class="emptyNote" style="padding-top:34px"><span class="big">nothing sent</span>No letters sent yet — write your first one!</div>`;
+    html+=`<div class="ltBtnRow"><button class="bigBtn" id="writeBtn" style="flex:1">✍️ Write a letter</button><button class="bigBtn ghost" id="inviteBtn">Invite a friend</button></div>`;
+    if(!letterData.sent.length) html+=`<div class="emptyNote" style="padding-top:30px"><span class="big" style="display:block"><svg class="envIllu" viewBox="0 0 120 94"><rect x="86" y="4" width="24" height="29" rx="2" fill="#fff" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.5 2.5"/><rect x="90.5" y="8.5" width="15" height="20" fill="#ffd9c4"/><path d="M98 13l1.7 3.4 3.8.6-2.7 2.7.6 3.8L98 21.7l-3.4 1.8.6-3.8-2.7-2.7 3.8-.6z" fill="#c96f2e"/><rect x="8" y="30" width="104" height="58" rx="7" fill="#f8eed3" stroke="#dcc794" stroke-width="2"/><path d="M8 34 L60 68 L112 34" fill="none" stroke="#dcc794" stroke-width="2"/><path d="M8 31 L60 64 L112 31 L112 30 L8 30 Z" fill="#efdfba"/><text x="60" y="82" font-size="15" text-anchor="middle">❤</text></svg></span><span class="big" style="display:block;font-size:22px;margin-top:2px">nothing sent</span>No letters sent yet — write your first one!</div>`;
     letterData.sent.forEach(L=>{
-      html+=`<div class="letterCard">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">To @${escH(L.toUsername)} (${escH(L.toName)}) · ${fmtDay(L.ts)}</div></div></div>`;
+      html+=`<div class="letterCard paper-${L.paper||'plain'}">${L.stampImg?`<img src="${escH(L.stampImg)}" onerror="this.style.display='none'">`:''}<div style="flex:1;min-width:0"><div class="lm">${escH(L.body)}</div><div class="lt">To @${escH(L.toUsername)} (${escH(L.toName)}) · ${fmtDay(L.ts)}</div></div></div>`;
     });
     body.innerHTML=html;
   }
   $('#writeBtn').onclick=composeLetter;
+  const ib=$('#inviteBtn'); if(ib) ib.onclick=inviteFriend;
+}
+async function inviteFriend(){
+  const un = session && session.user.username ? '@'+session.user.username : 'me';
+  const text = 'Join me on Snapmark 📮 \u2014 we can send each other letters! My username is '+un+'. Join here: https://snapmarkserver.vercel.app/';
+  if(navigator.share){ try{ await navigator.share({ title:'Snapmark', text }); return; }catch(e){ if(e && e.name==='AbortError') return; } }
+  try{ await navigator.clipboard.writeText(text); toast('Invite copied \u2014 paste it anywhere to share 📮'); }
+  catch(e){ toast('Share your username '+un+' with a friend'); }
 }
 async function composeLetter(){
+  const httpStamps = stamps.filter(x=>typeof x.img==='string' && x.img.startsWith('http'));
+  let paperPick='plain', stampPick = httpStamps.length ? httpStamps[0].img : null;
   const p=openModal('Write a letter',
     `<div class="fLab">To (@username)</div><input class="fld" data-k="to" id="ltTo" placeholder="@friend" autocapitalize="none" spellcheck="false"><div id="ltSugg"></div>
-     <div class="fLab">Your message</div><textarea class="fld" data-k="msg" rows="3" placeholder="Write something nice..."></textarea>`, 'Send letter');
+     <div class="fLab">Your message</div><textarea class="fld" data-k="msg" rows="3" placeholder="Write something nice..."></textarea>
+     <div class="fLab">Paper</div>
+     <div class="paperRow" id="paperRow">
+       <button type="button" class="paperSw sel" data-paper="plain">Plain</button>
+       <button type="button" class="paperSw sw-ruled" data-paper="ruled">Ruled</button>
+       <button type="button" class="paperSw sw-vintage" data-paper="vintage">Vintage</button>
+       <button type="button" class="paperSw sw-dots" data-paper="dots">Dots</button>
+     </div>
+     <div class="fLab">Postage stamp (your own stamp)</div>
+     <div class="stampStrip" id="stampStrip">
+       <div class="ssNone" data-ss="">No stamp</div>
+       ${httpStamps.map(u=>`<img src="${escH(u.img)}" data-ss="${escH(u.img)}" onerror="this.style.display='none'">`).join('')}
+     </div>`, 'Send letter');
+  document.querySelectorAll('#paperRow .paperSw').forEach(b=>{ b.onclick=()=>{ paperPick=b.dataset.paper;
+    document.querySelectorAll('#paperRow .paperSw').forEach(x=>x.classList.toggle('sel', x===b)); }; });
+  const strip=$('#stampStrip');
+  const markStrip=()=>{ if(!strip) return; strip.querySelectorAll('[data-ss]').forEach(el=>{
+    el.classList.toggle('selPick', (el.dataset.ss||null)===stampPick || (!el.dataset.ss && !stampPick)); }); };
+  if(strip){ strip.querySelectorAll('[data-ss]').forEach(el=>{ el.onclick=()=>{ stampPick=el.dataset.ss||null; markStrip(); }; }); markStrip(); }
   const toIn=$('#ltTo'), sugg=$('#ltSugg'); let sTimer=null;
   toIn.addEventListener('input', ()=>{
     clearTimeout(sTimer);
@@ -2078,8 +2136,7 @@ async function composeLetter(){
   });
   const r=await p;
   if(!r || !r.to || !r.to.trim() || !r.msg || !r.msg.trim()) return;
-  const stampImg = stamps.length && typeof stamps[0].img==='string' && stamps[0].img.startsWith('http') ? stamps[0].img : null;
-  const s=await api('sendLetter', { token: session.token, to: r.to, body: r.msg, stampImg });
+  const s=await api('sendLetter', { token: session.token, to: r.to, body: r.msg, stampImg: stampPick, paper: paperPick });
   if(!s.ok){ toast('✉️ '+(s.error||'Letter could not be sent')); return; }
   haptic(12); playSendFx(r.msg);
   toast('Letter sent to @'+s.to+' ✉️');

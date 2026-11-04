@@ -135,6 +135,7 @@ function ensureSchema() {
   if (!schemaReady) schemaReady = (async () => {
     await db.executeMultiple(SCHEMA);
     try { await db.execute('ALTER TABLE users ADD COLUMN username TEXT'); } catch (e) { /* column already there */ }
+    try { await db.execute("ALTER TABLE letters ADD COLUMN paper TEXT DEFAULT 'plain'"); } catch (e) { /* column already there */ }
     try { await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)'); } catch (e) {}
     await backfillUsernames();
   })().catch(e => { schemaReady = null; throw e; });
@@ -500,7 +501,7 @@ const actions = {
     return { ok: true, users: rows.map(r => ({ username: r.username, name: r.name })) };
   },
 
-  async sendLetter({ token, to, body, stampImg }) {
+  async sendLetter({ token, to, body, stampImg, paper }) {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Login required' };
     const uname = normUsername(to);
@@ -511,8 +512,9 @@ const actions = {
     if (!recip) return { ok: false, error: 'No Snapmark user with @' + uname + ' — check the username and try again' };
     if (Number(recip.id) === Number(data.uid)) return { ok: false, error: 'You cannot send a letter to yourself' };
     const img = typeof stampImg === 'string' && stampImg.startsWith('http') ? stampImg : null;
-    await run('INSERT INTO letters (from_id, to_id, body, stamp_img, created_at) VALUES (?,?,?,?,?)',
-      [data.uid, recip.id, text, img, now()]);
+    const pap = ['plain','ruled','vintage','dots'].includes(paper) ? paper : 'plain';
+    await run('INSERT INTO letters (from_id, to_id, body, stamp_img, paper, created_at) VALUES (?,?,?,?,?,?)',
+      [data.uid, recip.id, text, img, pap, now()]);
     return { ok: true, to: recip.username };
   },
 
@@ -520,14 +522,14 @@ const actions = {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Login required' };
     const recv = await allRows(
-      `SELECT l.id, l.body, l.stamp_img, l.created_at, l.read_at, u.username AS fu, u.name AS fn
+      `SELECT l.id, l.body, l.stamp_img, l.paper, l.created_at, l.read_at, u.username AS fu, u.name AS fn
        FROM letters l JOIN users u ON u.id=l.from_id WHERE l.to_id=? ORDER BY l.created_at DESC LIMIT 50`, [data.uid]);
     const sent = await allRows(
-      `SELECT l.id, l.body, l.stamp_img, l.created_at, u.username AS tu, u.name AS tn
+      `SELECT l.id, l.body, l.stamp_img, l.paper, l.created_at, u.username AS tu, u.name AS tn
        FROM letters l JOIN users u ON u.id=l.to_id WHERE l.from_id=? ORDER BY l.created_at DESC LIMIT 50`, [data.uid]);
     return { ok: true,
-      received: recv.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, ts: Number(r.created_at), read: !!r.read_at, fromUsername: r.fu, fromName: r.fn })),
-      sent: sent.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, ts: Number(r.created_at), toUsername: r.tu, toName: r.tn })) };
+      received: recv.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, paper: r.paper || 'plain', ts: Number(r.created_at), read: !!r.read_at, fromUsername: r.fu, fromName: r.fn })),
+      sent: sent.map(r => ({ id: Number(r.id), body: r.body, stampImg: r.stamp_img, paper: r.paper || 'plain', ts: Number(r.created_at), toUsername: r.tu, toName: r.tn })) };
   },
 
   async unreadLetters({ token }) {
