@@ -644,6 +644,13 @@
   @keyframes sealIn{ to{ transform:translate(-50%,-50%) scale(1); } }
   .sendPaper .fxStamp{ animation-delay:.62s; }
 
+  /* ===== LETTERS v33 (handle chip) ===== */
+  .handleLab{ font-size:11px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; color:var(--grey); margin:2px 0 6px; font-family:'Inter',sans-serif; }
+  .handleChip{ display:inline-flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--line); border-radius:99px; padding:5px 5px 5px 14px; font-weight:800; font-size:14.5px; color:var(--ink); max-width:100%; }
+  .handleChip span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .handleChip button{ border:none; background:#23211c; color:#f5efdd; font-family:'Inter',sans-serif; font-weight:800; font-size:11.5px; padding:6px 13px; border-radius:99px; cursor:pointer; flex:0 0 auto; }
+  .handleChip button:active{ transform:scale(.94); }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -1393,6 +1400,7 @@ async function enterApp(){
     saveAll(); fillCollSelects(); renderFolders();
     localOnly.forEach(s=>{ if(s.cloud) syncStamp(s); else uploadToCloud(s).then(ok=>{ if(ok && s.failNote){ s.failNote=false; saveAll(); notify('☁️','Cloud backup complete','A stamp that was waiting is now safely backed up to the cloud.'); } }); });
     api('setCollections', { token: session.token, colls });
+    pruneBrokenStamps();
   }
   /* backup codes khatam hone ko hon to user ko batao */
   api('backupStatus', { token: session.token }).then(r=>{
@@ -1675,6 +1683,7 @@ $('#revCollSel').onclick=()=>openDD('revCollSel','Save this stamp to', colls, DD
 $('#mgMoveSel').onclick=()=>openDD('mgMoveSel','Move selected stamps to', colls, DD.mgMoveSel||activeColl);
 $('#sqSel').onclick=()=>openDD('sqSel','Choose a question', SQ_QS, DD.sqSel||SQ_QS[0]);
 $('#suSqSel').onclick=()=>openDD('suSqSel','Choose a question', SQ_QS, DD.suSqSel||SQ_QS[0]);
+function stampWord(n){ return n===0 ? 'No stamps' : (n===1 ? '1 stamp' : n+' stamps'); }
 function collCount(name){ return name==='__all' ? stamps.length : stamps.filter(s=>s.coll===name).length; }
 let collView=localStorage.getItem('snapmark_collview')||'list';
 function applyCollView(){
@@ -1691,7 +1700,7 @@ function renderFolders(){
   const mk=(name, title, bg, imgs)=>{
     const d=document.createElement('div'); d.className='folder'; d.style.animationDelay=(fi++*0.06)+'s';
     d.innerHTML=(imgs&&imgs.length? `<div class="fimgs">${imgs.map(i=>`<img src="${i}">`).join('')}</div>`:'')+
-      `<div class="front" style="background:${rgba(bg,.68)}"><h3>${title}</h3><p>${collCount(name)} stamps</p></div>`;
+      `<div class="front" style="background:${rgba(bg,.68)}"><h3>${title}</h3><p>${stampWord(collCount(name))}</p></div>`;
     d.onclick=()=>openGrid(name); list.appendChild(d);
   };
   mk('__all','All Stamps','#e6dfca', stamps.slice(0,3).map(s=>s.img));
@@ -1754,7 +1763,7 @@ function renderCalendar(){
     const base=new Date(cy, cm+off, 1), y=base.getFullYear(), m=base.getMonth();
     const block=document.createElement('div'); block.className='calMonthBlock'; block.dataset.y=y; block.dataset.m=m;
     const cnt=Object.keys(byDay).filter(k=>{ const p=k.split('-'); return +p[0]===y && +p[1]===m+1; }).reduce((a,k)=>a+byDay[k].length,0);
-    block.innerHTML=`<div class="calMonth">${MNAMES[m]} ${y}<span class="days">${cnt ? cnt+' stamps' : 'No stamps yet'}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
+    block.innerHTML=`<div class="calMonth">${MNAMES[m]} ${y}<span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
     const grid=document.createElement('div'); grid.className='calGrid';
     let cellIdx=0;
     const cell=(yy,mm,d,dim,isToday)=>{
@@ -1846,7 +1855,7 @@ function renderProjects(){
     const d=document.createElement('div'); d.className='proj';
     const cnt = p.els ? p.els.filter(e=>e.type==='stamp').length : (p.stampIds||[]).length;
     d.innerHTML=`<div class="cov" style="background:${PATTERNS[p.pat%PATTERNS.length]}"><div class="pt">${p.name}</div></div>
-      <div class="meta"><b>${p.name}</b><p>${cnt} stamps</p></div>`;
+      <div class="meta"><b>${p.name}</b><p>${stampWord(cnt)}</p></div>`;
     d.onclick=()=>{ d.classList.add('flip'); setTimeout(()=>openProject(p.id), 240); }; g.appendChild(d);
   });
 }
@@ -2065,9 +2074,15 @@ async function renderLetters(){
   $('#tabRecv').classList.toggle('sel', letterTab==='recv');
   $('#tabSent').classList.toggle('sel', letterTab==='sent');
   const mh=$('#myHandle');
-  if(mh) mh.textContent = session && session.user.username
-    ? 'Your handle: @'+session.user.username+' — friends send you letters on it 💌'
-    : 'Set your username in Settings so friends can send you letters.';
+  if(mh){
+    if(session && session.user.username){
+      mh.innerHTML='<div class="handleLab">Your handle</div><div class="handleChip"><span>@'+escH(session.user.username)+'</span><button type="button" id="copyHandleBtn">Copy</button></div>';
+      const cb=$('#copyHandleBtn');
+      if(cb) cb.onclick=async()=>{ const h='@'+session.user.username;
+        try{ await navigator.clipboard.writeText(h); toast('Handle copied — share it with friends 📮'); }
+        catch(e){ toast('Your handle is '+h); } };
+    } else mh.textContent='Set your username in Settings so friends can send you letters.';
+  }
   body.innerHTML='<div class="skelStamp"></div><div class="skelStamp"></div><div class="skelStamp"></div>';
   const r=await api('listLetters', { token: session.token });
   if(r.ok) letterData={ received:r.received, sent:r.sent };
@@ -2324,6 +2339,36 @@ if(bkEl){ bkEl.style.cursor='pointer'; bkEl.addEventListener('click', ()=>{
   if(sp){ sp.classList.remove('ringsShake'); void sp.offsetWidth; sp.classList.add('ringsShake'); }
   setTimeout(()=>{ if(projects.length) openProject(projects[0].id); else createFromTemplate('diary'); }, 340);
 }); }
+
+
+/* ===== BROKEN STAMPS: placeholder + auto-cleanup (image gayi to record bhi jaye) ===== */
+const STAMP_PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='140'><rect x='4' y='4' width='112' height='132' rx='7' fill='#f1ead6'/><rect x='13' y='13' width='94' height='114' fill='none' stroke='#c9bfa4' stroke-width='2' stroke-dasharray='5 4'/><text x='60' y='86' font-size='30' text-anchor='middle' fill='#b3a888'>\u2726</text></svg>");
+document.addEventListener('error', e=>{
+  const t=e.target;
+  if(t && t.tagName==='IMG' && !t.dataset.fbDone){ t.dataset.fbDone='1'; t.src=STAMP_PLACEHOLDER; }
+}, true);
+function testImg(src){ return new Promise(res=>{ const im=new Image(); const to=setTimeout(()=>res(false), 6000);
+  im.onload=()=>{ clearTimeout(to); res(true); }; im.onerror=()=>{ clearTimeout(to); res(false); }; im.src=src; }); }
+async function pruneBrokenStamps(){
+  try{
+    if(navigator.onLine===false) return;
+    const httpStamps=stamps.filter(x=>typeof x.img==='string' && x.img.startsWith('http'));
+    if(!httpStamps.length) return;
+    const fails=JSON.parse(localStorage.getItem('snapmark_imgfail')||'{}');
+    let removed=0, changed=false;
+    await Promise.all(httpStamps.map(async st=>{
+      const ok=await testImg(st.img);
+      if(ok){ if(fails[st.id]){ delete fails[st.id]; changed=true; } }
+      else { fails[st.id]=(fails[st.id]||0)+1; changed=true;
+        if(fails[st.id]>=2){ stamps=stamps.filter(x=>x.id!==st.id); delete fails[st.id]; removed++;
+          if(session) api('deleteStamp', { token: session.token, id: st.id }); } }
+    }));
+    localStorage.setItem('snapmark_imgfail', JSON.stringify(fails));
+    if(removed){ saveAll(); renderFolders(); renderCalendar(); updGalThumb();
+      notify('🧹','Broken stamp removed', removed===1 ? 'A stamp whose photo was missing has been removed.' : removed+' stamps whose photos were missing have been removed.'); }
+    else if(changed){ /* sirf fail-count update */ }
+  }catch(e){}
+}
 
 /* ===== NOTIFICATIONS (jo khabar user tak pahunchni hi chahiye) ===== */
 function notifKey(){ return 'snapmark_notifs_' + (session && session.user ? session.user.id : 'guest'); }
