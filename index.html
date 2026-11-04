@@ -770,6 +770,16 @@
   .shutterRow #shutter{ justify-self:center; }
   .shutterRow .zoomSel{ justify-self:end; }
 
+  /* ===== v45 BOOT SPLASH (no login flash) ===== */
+  #authScreen{ transition:opacity .3s ease; }
+  html.bootWait #authScreen{ opacity:0; pointer-events:none; }
+  #bootSplash{ position:absolute; inset:0; z-index:120; display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; background-color:#f8f4ea; background-image:radial-gradient(#e3dac4 1.1px, transparent 1.25px); background-size:22px 22px; }
+  html.bootWait #bootSplash{ display:flex; }
+  #bootSplash .bsMark{ width:56px; height:56px; animation:stampPulse 1s ease-in-out infinite alternate; }
+  #bootSplash .bsLogo{ font-family:'Playfair Display',serif; font-weight:800; font-size:31px; color:var(--ink); }
+  #bootSplash .bsLogo span{ color:var(--accent); }
+  #bootSplash .bsSub{ font-size:12.5px; font-weight:600; color:#8b8779; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -848,6 +858,7 @@
     #legalBody{ padding-left:28px; padding-right:28px; }
   }
 </style>
+<script>try{ if(localStorage.getItem('snapmark_session')) document.documentElement.classList.add('bootWait'); }catch(e){}</script>
 </head>
 <body>
 <div id="phone">
@@ -1129,6 +1140,7 @@
   </div>
 
   <!-- AUTH -->
+  <div id="bootSplash"><svg class="bsMark" aria-hidden="true"><use href="#stampMark"></use></svg><div class="bsLogo">Snap<span>mark</span></div><div class="bsSub">Opening your stamps…</div></div>
   <div id="authScreen" class="enter">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="stampMark" viewBox="0 0 48 48"><g transform="rotate(-4 24 24)"><rect x="6" y="6" width="36" height="36" rx="4" fill="#fffdf6" stroke="#26221c" stroke-width="2.2"/><rect x="10.5" y="10.5" width="27" height="27" rx="2.5" fill="none" stroke="#c96f2e" stroke-width="1.6" stroke-dasharray="3.2 2.6"/><circle cx="24" cy="24" r="8.6" fill="none" stroke="#26221c" stroke-width="2.2"/><path d="M24 15.4 L24 21 M31.5 19.7 L26.8 22.4 M31.5 28.3 L26.8 25.6 M24 32.6 L24 27 M16.5 28.3 L21.2 25.6 M16.5 19.7 L21.2 22.4" stroke="#26221c" stroke-width="2" stroke-linecap="round" fill="none"/></g></symbol></defs></svg>
     <svg class="aMark" aria-hidden="true"><use href="#stampMark"></use></svg>
@@ -1576,6 +1588,7 @@ function visibleAuthCard(){ const v=[...document.querySelectorAll('#authScreen >
 function authSuccess(btn){ const card=visibleAuthCard(); if(!card || document.documentElement.classList.contains('rm')){ enterApp(); return; } $('#authScreen').classList.remove('enter'); if(btn){ btn.dataset.orig=btn.textContent; btn.innerHTML='✓'; btn.classList.add('won'); btn.disabled=true; } setTimeout(()=>card.classList.add('flyAway'), 170); setTimeout(()=>{ card.classList.remove('flyAway'); enterApp(); }, 580); }
 async function enterApp(){
   $('#authScreen').style.display='none';
+  document.documentElement.classList.remove('bootWait');
   if(!session) return;
   const jt=localStorage.getItem('snapmark_join');
   if(jt){ localStorage.removeItem('snapmark_join'); api('claimInvite', { token: session.token, inviteToken: jt }).then(r=>{ if(r && r.ok && r.inviter) toast('You joined via @'+r.inviter+'\u2019s invite 🎉'); }).catch(()=>{}); }
@@ -2532,7 +2545,8 @@ fillCollSelects(); renderFolders();
   const _le=localStorage.getItem('snapmark_last_email'); if(_le && !$('#liEmail').value) $('#liEmail').value=_le;
   refreshWaLoginBtn(); }
 (function(){ const j=new URLSearchParams(location.search).get('join'); if(j){ localStorage.setItem('snapmark_join', j); history.replaceState(null, '', location.pathname); api('inviteInfo', { inviteToken: j }).then(r=>{ if(r && r.ok && r.username){ const msg='🎉 <b>@'+r.username+'</b> invited you to Snapmark \u2014 join and send each other letters & stamps!'; ['joinNoteLogin','joinNoteSignup'].forEach(id=>{ const n=document.getElementById(id); if(n){ n.innerHTML=msg; n.classList.add('on'); } }); } }).catch(()=>{}); } })();
-if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
+if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); document.documentElement.classList.remove('bootWait'); } }).catch(()=>document.documentElement.classList.remove('bootWait')); }
+setTimeout(()=>document.documentElement.classList.remove('bootWait'), 8000);
 
 function playSendFx(msg){
   if(document.documentElement.classList.contains('rm')) return;
