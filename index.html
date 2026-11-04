@@ -687,6 +687,16 @@
   .authOtpLine{ font-size:11px; }
   #filmLogo{ letter-spacing:3px; }
 
+  /* ===== v38 AUTH FLOW ===== */
+  .atPrefix{ position:absolute; left:14px; top:50%; transform:translateY(-50%); font-weight:700; color:#6f6a5e; pointer-events:none; font-size:15px; z-index:2; }
+  .atIn{ padding-left:31px; }
+  .fldErr{ display:none; color:#b3372a; font-size:12.5px; font-weight:600; margin:6px 2px 0; text-align:left; }
+  .fldErr.on{ display:block; }
+  .gDivider{ display:flex; align-items:center; gap:10px; margin:14px 0 10px; color:#8b8779; font-size:11.5px; font-weight:700; letter-spacing:.6px; }
+  .gDivider::before, .gDivider::after{ content:''; flex:1; height:1.5px; background:var(--line); }
+  .gBtnSlot{ display:flex; justify-content:center; min-height:40px; }
+  #waLoginBtn{ margin-top:10px; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -923,6 +933,13 @@
           <div class="authErr" id="sqErr"></div>
         </div>
         <div class="setCard">
+          <h3>Fingerprint / Face unlock</h3>
+          <div class="sub">Log in with your fingerprint or face on this device — no typing your password every day.</div>
+          <div class="setStat" id="waStat" style="display:none"></div>
+          <button class="bigBtn" id="waToggleBtn">Enable fingerprint unlock</button>
+          <div class="authErr" id="waErr"></div>
+        </div>
+        <div class="setCard">
           <h3>Change password</h3>
           <div class="fLab">Current password</div>
           <input class="fld" id="cpCur" type="password" placeholder="Current password">
@@ -1049,13 +1066,17 @@
         <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmA" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmA">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
         <div class="authTabs"><div id="tabLogin" class="sel">Log in</div><div id="tabSignup">Sign up</div></div>
         <div class="fLab">Email</div>
-        <input class="fld" id="liEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <input class="fld" id="liEmail" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email" enterkeyhint="next">
+        <div class="fldErr" id="liEmailErr"></div>
         <div class="fLab">Password</div>
-        <div class="fWrap"><input class="fld" id="liPass" type="password" placeholder="Your password" autocomplete="current-password"><button class="eyeBtn" data-eye="liPass" type="button">👁</button></div>
+        <div class="fWrap"><input class="fld" id="liPass" type="password" placeholder="Your password" autocomplete="current-password" enterkeyhint="done"><button class="eyeBtn" data-eye="liPass" type="button">👁</button></div>
+        <div class="fldErr" id="liPassErr"></div>
         <div class="linkRow"><a id="forgotLink">Forgot password?</a></div>
         <button class="authBtn" id="loginBtn">Log in</button>
         <div class="linkRow" style="text-align:center;margin-top:12px"><a id="backupLoginLink">Log in with a backup code</a></div>
         <div class="authErr" id="loginErr"></div>
+        <div class="gWrap" style="display:none"><div class="gDivider">OR</div><div class="gBtnSlot" id="gBtnLogin"></div></div>
+        <button class="bigBtn ghost" id="waLoginBtn" style="display:none;margin-top:10px">Use fingerprint / face</button>
       </div>
     </div>
 
@@ -1063,20 +1084,21 @@
       <div class="stampCard">
         <svg class="postmark" viewBox="0 0 120 120"><defs><path id="pmB" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs><circle cx="60" cy="60" r="57" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1.6"/><text font-size="12" font-weight="800" letter-spacing="2.6" fill="currentColor"><textPath href="#pmB">Snapmark • Post • Est 2026 • </textPath></text><text x="60" y="67" text-anchor="middle" font-size="16" fill="currentColor">✈</text></svg>
         <div class="authTabs"><div id="tabLogin2">Log in</div><div id="tabSignup2" class="sel">Sign up</div></div>
-        <div class="fLab">Your name</div>
-        <input class="fld" id="suName" type="text" placeholder="Full name" autocomplete="name">
         <div class="fLab">Choose a username</div>
-        <input class="fld" id="suUser" type="text" placeholder="@yourname" autocomplete="username" autocapitalize="none" spellcheck="false">
+        <div class="fWrap"><span class="atPrefix">@</span><input class="fld atIn" id="suUser" type="text" placeholder="yourname" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next"></div>
         <div class="strengthTxt" id="suUserStat">Your unique @handle — friends will send you letters on it. One username belongs to one person only.</div>
         <div class="fLab">Email</div>
-        <input class="fld" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <input class="fld" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email" enterkeyhint="next">
+        <div class="fldErr" id="suEmailErr"></div>
         <div class="fLab">Password</div>
-        <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="Create a password" autocomplete="new-password"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
+        <div class="fWrap"><input class="fld" id="suPass" type="password" placeholder="Create a password" autocomplete="new-password" enterkeyhint="done"><button class="eyeBtn" data-eye="suPass" type="button">👁</button></div>
+        <div class="fldErr" id="suPassErr"></div>
         <div class="strength" id="strengthBar"><i></i><i></i><i></i><i></i></div>
         <div class="strengthTxt" id="strengthTxt">Use 8+ characters with numbers or symbols for a stronger password.</div>
         <label class="agreeRow"><input type="checkbox" id="suAgree"><span>I agree to the <a id="suTermsLink">Terms &amp; Conditions</a> and the <a id="suPrivacyLink">Privacy Policy</a> of Snapmark.</span></label>
         <button class="authBtn" id="otpBtn">Continue →</button>
         <div class="authErr" id="signupErr"></div>
+        <div class="gWrap" style="display:none"><div class="gDivider">OR</div><div class="gBtnSlot" id="gBtnSignup"></div></div>
       </div>
     </div>
 
@@ -1116,7 +1138,7 @@
       <div class="authErr" id="otpErr"></div>
       <div class="authMsg" id="otpMsg"></div>
       <button class="authBtn" id="verifyBtn">Verify code</button>
-      <div class="resendRow">Didn't get it? <a id="resendLink" class="off">Resend code</a> <span id="resendTimer">(0:60)</span></div>
+      <div class="resendRow">Didn't get it? <a id="resendLink" class="off">Resend code</a> <span id="resendTimer">(0:30)</span></div>
     </div>
 
     <div id="viewBackupLogin" style="display:none">
@@ -1174,6 +1196,9 @@
       <div class="stampCard">
         <div class="otpHead" style="font-size:25px">Secure your account</div>
         <p class="otpSub">Two quick safety nets — so you never lose your account or your stamps. Takes less than a minute.</p>
+        <div class="fLab">Your name</div>
+        <input class="fld" id="stName" type="text" placeholder="Your full name" autocomplete="name" enterkeyhint="next">
+        <p class="otpSub" style="margin:4px 0 2px">This is how friends will see you on letters.</p>
         <div class="fLab">Security question</div>
         <button type="button" class="fld ddBtn" id="suSqSel">What was the name of your first school? ▾</button>
         <input class="fld" id="suSqAns" type="text" placeholder="Your answer" style="margin-top:10px">
@@ -1247,6 +1272,7 @@ async function uploadToCloud(rec){
 
 /* ---------- Server + Auth (Scribly-style) ---------- */
 const API = window.SNAPMARK_API || (location.protocol.startsWith('http') ? location.origin + '/api' : 'http://localhost:8792/api');
+const GOOGLE_CLIENT_ID = ''; /* Google OAuth Client ID (public) — milte hi Google buttons live ho jayenge */
 let session = JSON.parse(localStorage.getItem('snapmark_session') || 'null');
 async function api(action, params){
   try{
@@ -1326,8 +1352,11 @@ $('#suBkGen').onclick=async(e)=>{
     e.target.textContent='Regenerate codes'; toast('Save these codes somewhere safe 📋'); }
   else $('#suErr').textContent=r.error;
 };
-$('#suDoneBtn').onclick=()=>enterApp();
-$('#suSkip').onclick=()=>enterApp();
+async function saveSetupName(){ const el=$('#stName'); if(!el || !session) return; const nm=el.value.trim();
+  if(nm.length>=2 && nm!==session.user.name){ const r=await api('setName', { token: session.token, name: nm });
+    if(r.ok){ session.user.name=r.name; localStorage.setItem('snapmark_session', JSON.stringify(session)); } } }
+$('#suDoneBtn').onclick=async()=>{ await saveSetupName(); enterApp(); };
+$('#suSkip').onclick=async()=>{ await saveSetupName(); enterApp(); };
 $('#rqBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Saving…');
   const r=await api('resetWithAnswer', { email:$('#rqEmail').value.trim(), answer:$('#rqAnswer').value, newPassword:$('#rqPass').value });
@@ -1341,8 +1370,8 @@ $('#otpBack').onclick=()=>authView(otpCtx.mode==='signup' ? 'signup' : 'resetEma
 document.querySelectorAll('.eyeBtn').forEach(b=>{ b.onclick=()=>{ const f=document.getElementById(b.dataset.eye); f.type = f.type==='password' ? 'text':'password'; }; });
 
 function startResendTimer(){
-  let left=60; const link=$('#resendLink'), txt=$('#resendTimer');
-  link.classList.add('off'); txt.textContent='(0:60)';
+  let left=30; const link=$('#resendLink'), txt=$('#resendTimer');
+  link.classList.add('off'); txt.textContent='(0:30)';
   clearInterval(resendTimerInt);
   resendTimerInt=setInterval(()=>{ left--;
     if(left<=0){ clearInterval(resendTimerInt); link.classList.remove('off'); txt.textContent=''; }
@@ -1379,28 +1408,28 @@ $('#suPass').addEventListener('input', ()=>{
 });
 function setBusy(btn, busy, txt){ if(busy){ btn.dataset.old=btn.textContent; btn.textContent=txt; btn.disabled=true; } else { btn.textContent=btn.dataset.old||btn.textContent; btn.disabled=false; } }
 
-['suName','suUser','suEmail','suPass'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>el.classList.remove('bad')); });
+['suUser','suEmail','suPass'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>{ el.classList.remove('bad'); const fe=document.getElementById(id+'Err'); if(fe) fe.classList.remove('on'); }); });
 $('#otpBtn').onclick=async(e)=>{
-  const nameEl=$('#suName'), userEl=$('#suUser'), emailEl=$('#suEmail'), passEl=$('#suPass'), agreeEl=$('#suAgree');
-  const badName = nameEl.value.trim().length<2;
+  const userEl=$('#suUser'), emailEl=$('#suEmail'), passEl=$('#suPass'), agreeEl=$('#suAgree');
   const badUser = !suUserOK;
   const badEmail = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
   const badPass = passEl.value.length<8;
   const badAgree = !agreeEl.checked;
-  nameEl.classList.toggle('bad', badName);
   userEl.classList.toggle('bad', badUser);
   emailEl.classList.toggle('bad', badEmail);
   passEl.classList.toggle('bad', badPass);
   agreeEl.closest('.agreeRow').classList.toggle('bad', badAgree);
+  const emErr=$('#suEmailErr'), pwErr=$('#suPassErr');
+  if(emErr){ emErr.textContent = badEmail ? 'Invalid email' : ''; emErr.classList.toggle('on', badEmail); }
+  if(pwErr){ pwErr.textContent = badPass ? 'Use at least 8 characters' : ''; pwErr.classList.toggle('on', badPass); }
   const msgs=[];
-  if(badName) msgs.push('enter your name');
   if(badUser) msgs.push('choose an available username');
   if(badEmail) msgs.push('enter a valid email');
   if(badPass) msgs.push('use a password of 8+ characters');
   if(badAgree) msgs.push('accept the Terms & Privacy Policy');
-  if(msgs.length){ $('#signupErr').textContent='Please ' + msgs.join(', ') + '.'; ([nameEl,userEl,emailEl,passEl].find(el=>el.classList.contains('bad')) || agreeEl).focus(); return; }
+  if(msgs.length){ $('#signupErr').textContent='Please ' + msgs.join(', ') + '.'; ([userEl,emailEl,passEl].find(el=>el.classList.contains('bad')) || agreeEl).focus(); return; }
   $('#signupErr').textContent='';
-  const email=emailEl.value.trim(), name=nameEl.value.trim(), pass=passEl.value;
+  const email=emailEl.value.trim(), pass=passEl.value;
   setBusy(e.target, true, 'Sending code…');
   const r=await api('requestSignupOtp', { email });
   setBusy(e.target, false);
@@ -1415,10 +1444,10 @@ $('#verifyBtn').onclick=async(e)=>{
   if(!v.ok){ setBusy(e.target, false); $('#otpErr').textContent=v.error;
     const bx=$('#otpBoxes'); bx.classList.remove('shake'); void bx.offsetWidth; bx.classList.add('shake'); return; }
   if(otpCtx.mode==='signup'){
-    const r=await api('register', { name:$('#suName').value, email: otpCtx.email, password:$('#suPass').value, code, username:$('#suUser').value });
+    const r=await api('register', { name:'', email: otpCtx.email, password:$('#suPass').value, code, username:$('#suUser').value });
     setBusy(e.target, false);
     if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
-      toast('Welcome, '+r.user.name+'! 🎉'); authView('setup'); }
+      toast('Welcome, '+r.user.name+'! 🎉'); const sn=$('#stName'); if(sn) sn.value=r.user.name||''; authView('setup'); }
     else $('#otpErr').textContent=r.error;
   } else {
     setBusy(e.target, false); authView('newPass');
@@ -1430,13 +1459,22 @@ $('#resendLink').onclick=async()=>{
   if(r.ok){ $('#otpMsg').textContent='✓ New code sent'; startResendTimer(); }
   else $('#otpErr').textContent=r.error;
 };
+['liEmail','liPass'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', ()=>{ el.classList.remove('bad'); const fe=document.getElementById(id+'Err'); if(fe) fe.classList.remove('on'); }); });
 $('#loginBtn').onclick=async(e)=>{
+  const em=$('#liEmail'), pw=$('#liPass'), emErr=$('#liEmailErr'), pwErr=$('#liPassErr');
+  em.classList.remove('bad'); pw.classList.remove('bad');
+  emErr.classList.remove('on'); pwErr.classList.remove('on'); $('#loginErr').textContent='';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())){ em.classList.add('bad'); emErr.textContent='Invalid email'; emErr.classList.add('on'); em.focus(); return; }
+  if(!pw.value){ pw.classList.add('bad'); pwErr.textContent='Enter your password'; pwErr.classList.add('on'); pw.focus(); return; }
   setBusy(e.target, true, 'Logging in…');
-  const r=await api('login', { email:$('#liEmail').value, password:$('#liPass').value });
+  const r=await api('login', { email:em.value, password:pw.value });
   setBusy(e.target, false);
   if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+    localStorage.setItem('snapmark_last_email', r.user.email);
     toast('Welcome back, '+r.user.name+'!'); enterApp(); }
-  else $('#loginErr').textContent=r.error;
+  else if(/Too many/.test(r.error||'')) $('#loginErr').textContent=r.error;
+  else if(/Google/.test(r.error||'')){ pwErr.textContent=r.error; pwErr.classList.add('on'); }
+  else { pw.classList.add('bad'); pwErr.textContent='Wrong password'; pwErr.classList.add('on'); pw.focus(); }
 };
 $('#rsSendBtn').onclick=async(e)=>{
   setBusy(e.target, true, 'Sending…');
@@ -1456,6 +1494,7 @@ $('#rsBtn').onclick=async(e)=>{
 async function enterApp(){
   $('#authScreen').style.display='none';
   if(!session) return;
+  maybePromptWa();
   requestAnimationFrame(()=>setNav(curNav));
   $('#avatarBtn').textContent=(session.user.name||'S').trim()[0].toUpperCase();
   if(!session.user.username){ const m=await api('me', { token: session.token }); if(m.ok && m.user){ session.user=m.user; localStorage.setItem('snapmark_session', JSON.stringify(session)); } }
@@ -2376,7 +2415,7 @@ function showScreen(id, back){
   if(id==='calScreen') renderCalendar();
   if(id==='bookScreen') renderProjects();
   if(id==='letterScreen') renderLetters();
-  if(id==='settingsScreen') loadSettings();
+  if(id==='settingsScreen'){ loadSettings(); refreshWaStat(); }
 }
 let curNav=0;
 function setNav(i){
@@ -2400,6 +2439,9 @@ fillCollSelects(); renderFolders();
 { const _hc=Number(localStorage.getItem('snapmark_hint_n')||0);
   if(_hc>=3){ const h=document.querySelector('.camHint'); if(h) h.style.display='none'; }
   else localStorage.setItem('snapmark_hint_n', String(_hc+1)); }
+{ const _wb=$('#waLoginBtn'); if(_wb) _wb.onclick=waLogin;
+  const _le=localStorage.getItem('snapmark_last_email'); if(_le && !$('#liEmail').value) $('#liEmail').value=_le;
+  refreshWaLoginBtn(); }
 if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
 
 function playSendFx(msg){
@@ -2547,7 +2589,10 @@ $('#suTermsLink').onclick=e=>{ e.preventDefault(); e.stopPropagation(); openLega
 $('#suAgree').addEventListener('change', e=>{ e.target.closest('.agreeRow').classList.remove('bad'); });
 let suUserOK=false, suUserTimer=null;
 $('#suUser').addEventListener('input', ()=>{
-  const u=$('#suUser').value.trim().replace(/^@+/,'').toLowerCase();
+  const el=$('#suUser');
+  const cleaned=el.value.toLowerCase().replace(/@/g,'').replace(/\s+/g,'');
+  if(el.value!==cleaned) el.value=cleaned;
+  const u=cleaned;
   const st=$('#suUserStat'); suUserOK=false;
   if(!u){ st.textContent='Your unique @handle — friends will send you letters on it. One username belongs to one person only.'; st.className='strengthTxt'; return; }
   if(!/^[a-z][a-z0-9._]{2,19}$/.test(u) || u.includes('..') || u.endsWith('.')){ st.textContent='Use 3-20 characters: letters, numbers, dot or underscore, starting with a letter.'; st.className='strengthTxt bad'; return; }
@@ -2555,10 +2600,113 @@ $('#suUser').addEventListener('input', ()=>{
   clearTimeout(suUserTimer);
   suUserTimer=setTimeout(async()=>{
     const r=await api('checkUsername', { username:u });
-    if($('#suUser').value.trim().replace(/^@+/,'').toLowerCase()!==u) return;
+    if($('#suUser').value!==u) return;
     if(r.ok && r.available){ suUserOK=true; st.textContent='✓ @'+u+' is available'; st.className='strengthTxt ok'; }
     else { st.textContent='✗ @'+u+' is already taken — try another'; st.className='strengthTxt bad'; }
   }, 400);
+});
+
+/* ===== WEBAUTHN (fingerprint / face) ===== */
+const waSupported = ()=> !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+const bufToB64url = buf => { const u8=new Uint8Array(buf); let bin=''; u8.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const b64urlToBuf = str => { const b64=String(str).replace(/-/g,'+').replace(/_/g,'/'); const bin=atob(b64 + '='.repeat((4 - b64.length % 4) % 4)); const u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return u8.buffer; };
+async function refreshWaStat(){ const st=$('#waStat'), btn=$('#waToggleBtn'); if(!st || !btn || !session) return;
+  const r=await api('webauthnStatus', { token: session.token });
+  if(!r.ok) return;
+  st.style.display=''; st.textContent = r.enabled ? '✓ Enabled for your account' : 'Not enabled yet';
+  btn.textContent = r.enabled ? 'Turn off fingerprint unlock' : 'Enable fingerprint unlock';
+  btn.onclick = r.enabled ? waDisable : waEnable; }
+async function waEnable(){
+  const errEl=$('#waErr'); if(errEl) errEl.textContent='';
+  if(!waSupported()){ if(errEl) errEl.textContent='This browser does not support fingerprint login.'; return; }
+  const r=await api('webauthnRegOptions', { token: session.token });
+  if(!r.ok){ if(errEl) errEl.textContent=r.error; return; }
+  const o=r.options;
+  let cred;
+  try{ cred=await navigator.credentials.create({ publicKey: {
+    challenge: b64urlToBuf(o.challenge), rp: { id: location.hostname, name: 'Snapmark' },
+    user: { id: b64urlToBuf(o.user.id), name: o.user.name, displayName: o.user.displayName },
+    pubKeyCredParams: o.pubKeyCredParams, authenticatorSelection: o.authenticatorSelection,
+    attestation: 'none', timeout: o.timeout } }); }
+  catch(e){ if(errEl) errEl.textContent='Fingerprint setup was cancelled.'; return; }
+  const rr=await api('webauthnRegister', { token: session.token, cred: { id: cred.id, response: {
+    attestationObject: bufToB64url(cred.response.attestationObject),
+    clientDataJSON: bufToB64url(cred.response.clientDataJSON) } } });
+  if(rr.ok){ localStorage.setItem('snapmark_wa_email', session.user.email); toast('Fingerprint unlock enabled ✓'); refreshWaStat(); refreshWaLoginBtn(); }
+  else if(errEl) errEl.textContent=rr.error;
+}
+async function waDisable(){
+  const r=await api('webauthnDisable', { token: session.token });
+  if(r.ok){ localStorage.removeItem('snapmark_wa_email'); toast('Fingerprint unlock off'); refreshWaStat(); refreshWaLoginBtn(); }
+}
+function refreshWaLoginBtn(){ const b=$('#waLoginBtn'); if(!b) return;
+  const ok = !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+  b.style.display = (localStorage.getItem('snapmark_wa_email') && ok) ? '' : 'none'; }
+async function waLogin(){
+  const emErr=$('#liEmailErr'), pwErr=$('#liPassErr');
+  emErr.classList.remove('on'); pwErr.classList.remove('on');
+  const email=($('#liEmail').value || localStorage.getItem('snapmark_wa_email') || '').trim();
+  if(!email){ emErr.textContent='Enter your email first'; emErr.classList.add('on'); $('#liEmail').focus(); return; }
+  const r=await api('webauthnAuthOptions', { email });
+  if(!r.ok){ pwErr.textContent=r.error; pwErr.classList.add('on'); return; }
+  const o=r.options;
+  let cred;
+  try{ cred=await navigator.credentials.get({ publicKey: {
+    challenge: b64urlToBuf(o.challenge),
+    allowCredentials: o.allowCredentials.map(c=>({ type:'public-key', id: b64urlToBuf(c.id) })),
+    userVerification: 'required', timeout: o.timeout } }); }
+  catch(e){ pwErr.textContent='Fingerprint sign-in was cancelled'; pwErr.classList.add('on'); return; }
+  const rr=await api('webauthnAuth', { email, cred: { id: cred.id, response: {
+    authenticatorData: bufToB64url(cred.response.authenticatorData),
+    clientDataJSON: bufToB64url(cred.response.clientDataJSON),
+    signature: bufToB64url(cred.response.signature) } } });
+  if(rr.ok){ session={ token:rr.token, user:rr.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+    localStorage.setItem('snapmark_last_email', rr.user.email);
+    toast('Welcome back, '+rr.user.name+'!'); enterApp(); }
+  else { pwErr.textContent=rr.error; pwErr.classList.add('on'); }
+}
+function maybePromptWa(){
+  if(!waSupported() || !session) return;
+  if(localStorage.getItem('snapmark_wa_email') || localStorage.getItem('snapmark_wa_prompted')) return;
+  if(!localStorage.getItem('snapmark_tour_v1')) return; /* pehle tour, phir prompt — dono ek saath nahi */
+  localStorage.setItem('snapmark_wa_prompted','1');
+  setTimeout(async()=>{ const ok=await openModal('Fingerprint unlock', '<p class="otpSub">Log in faster next time with your fingerprint or face — no password typing every day. Set it up now?</p>', 'Enable fingerprint');
+    if(ok){ showScreen('settingsScreen'); setTimeout(()=>{ const b=$('#waToggleBtn'); if(b && b.onclick) b.click(); }, 500); } }, 1200);
+}
+
+/* ===== GOOGLE SIGN-IN ===== */
+function onGoogleCredential(resp){
+  if(!resp || !resp.credential) return;
+  api('googleAuth', { idToken: resp.credential }).then(r=>{
+    if(r.ok){ session={ token:r.token, user:r.user }; localStorage.setItem('snapmark_session', JSON.stringify(session));
+      localStorage.setItem('snapmark_last_email', r.user.email);
+      if(r.isNew){ toast('Welcome, '+r.user.name+'! 🎉'); const sn=$('#stName'); if(sn) sn.value=r.user.name||''; authView('setup'); }
+      else { toast('Welcome back, '+r.user.name+'!'); enterApp(); } }
+    else toast(r.error || 'Google sign-in failed');
+  });
+}
+function initGoogle(){
+  if(!GOOGLE_CLIENT_ID || !window.google || !google.accounts || !google.accounts.id) return;
+  document.querySelectorAll('.gWrap').forEach(w=>w.style.display='');
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
+  ['gBtnLogin','gBtnSignup'].forEach(id=>{ const el=document.getElementById(id);
+    if(el) google.accounts.id.renderButton(el, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width:250 }); });
+}
+if(GOOGLE_CLIENT_ID){ const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.defer=true; sc.onload=initGoogle; document.head.appendChild(sc); }
+
+/* ===== KEYBOARD POLISH (auth) ===== */
+$('#authScreen').addEventListener('keydown', e=>{
+  if(e.key!=='Enter' || !e.target.classList || !e.target.classList.contains('fld')) return;
+  const view=e.target.closest('[id^="view"]'); if(!view) return;
+  e.preventDefault();
+  const inputs=[...view.querySelectorAll('input.fld')].filter(i=>i.offsetParent!==null);
+  const idx=inputs.indexOf(e.target);
+  if(idx>=0 && idx<inputs.length-1) inputs[idx+1].focus();
+  else { const btn=view.querySelector('.authBtn'); if(btn) btn.click(); }
+});
+$('#authScreen').addEventListener('focusin', e=>{
+  if(e.target.classList && e.target.classList.contains('fld'))
+    setTimeout(()=>{ try{ e.target.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(_){} }, 260);
 });
 
 /* ===== APP TOUR ===== */

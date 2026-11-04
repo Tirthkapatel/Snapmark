@@ -16,6 +16,7 @@ const { createClient } = require('@libsql/client');
 const PORT = process.env.PORT || 8792;
 const SECRET = process.env.SESSION_SECRET || 'dev-secret-change-in-prod';
 const SENDER = process.env.SENDER_EMAIL || '';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const APP_PASS = process.env.GMAIL_APP_PASSWORD || '';
 
 const db = process.env.TURSO_DATABASE_URL
@@ -137,6 +138,9 @@ function ensureSchema() {
     try { await db.execute('ALTER TABLE users ADD COLUMN username TEXT'); } catch (e) { /* column already there */ }
     try { await db.execute("ALTER TABLE letters ADD COLUMN paper TEXT DEFAULT 'plain'"); } catch (e) { /* column already there */ }
     try { await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)'); } catch (e) {}
+    try { await db.execute("ALTER TABLE users ADD COLUMN provider TEXT DEFAULT 'email'"); } catch (e) {}
+    try { await db.execute('ALTER TABLE users ADD COLUMN wa_cred TEXT'); } catch (e) {}
+    try { await db.execute('CREATE TABLE IF NOT EXISTS wa_chal (k TEXT PRIMARY KEY, challenge TEXT, exp INTEGER)'); } catch (e) {}
     await backfillUsernames();
   })().catch(e => { schemaReady = null; throw e; });
   return schemaReady;
@@ -219,7 +223,7 @@ async function issueOtp(email, purpose) {
   const row = await one('SELECT * FROM otps WHERE email=? AND purpose=?', [email, purpose]);
   const t = now();
   if (row) {
-    if (t - Number(row.sent_at) < 60 * 1000) return { ok: false, error: 'Please wait a minute before requesting a new code' };
+    if (t - Number(row.sent_at) < 30 * 1000) return { ok: false, error: 'Please wait 30 seconds before requesting a new code' };
     if (t - Number(row.window_start) < 3600 * 1000 && Number(row.sent_count) >= 5)
       return { ok: false, error: 'Too many codes requested — please try again in an hour' };
   }
@@ -247,6 +251,50 @@ async function checkOtp(email, purpose, code) {
 }
 
 /* ---------- actions ---------- */
+/* ---------- WebAuthn (fingerprint / face passkey) ---------- */
+const b64url = buf => Buffer.from(buf).toString('base64url');
+const b64urlToBuf = str => Buffer.from(String(str || ''), 'base64url');
+function cborDecode(buf, off) {
+  const b = buf[off]; const mt = b >> 5; let ai = b & 31; let pos = off + 1; let len;
+  if (ai < 24) len = ai;
+  else if (ai === 24) { len = buf[pos]; pos += 1; }
+  else if (ai === 25) { len = buf.readUInt16BE(pos); pos += 2; }
+  else if (ai === 26) { len = buf.readUInt32BE(pos); pos += 4; }
+  else if (ai === 27) { len = Number(buf.readBigUInt64BE(pos)); pos += 8; }
+  else throw new Error('cbor ai');
+  if (mt === 0) return [len, pos];
+  if (mt === 1) return [-1 - len, pos];
+  if (mt === 2) return [buf.subarray(pos, pos + len), pos + len];
+  if (mt === 3) return [buf.toString('utf8', pos, pos + len), pos + len];
+  if (mt === 4) { const arr = []; for (let i = 0; i < len; i++) { const [v, np] = cborDecode(buf, pos); arr.push(v); pos = np; } return [arr, pos]; }
+  if (mt === 5) { const obj = {}; for (let i = 0; i < len; i++) { const [k, np1] = cborDecode(buf, pos); const [v, np2] = cborDecode(buf, np1); obj[k] = v; pos = np2; } return [obj, pos]; }
+  if (mt === 7) { if (ai === 20) return [true, pos]; if (ai === 21) return [false, pos]; if (ai === 22) return [null, pos]; if (ai === 23) return [undefined, pos]; throw new Error('cbor mt7'); }
+  throw new Error('cbor mt');
+}
+function parseAuthData(buf) {
+  const rpIdHash = buf.subarray(0, 32);
+  const flags = buf[32];
+  const signCount = buf.readUInt32BE(33);
+  let off = 37, attested = null;
+  if (flags & 0x40) {
+    off += 16;
+    const credIdLen = buf.readUInt16BE(off); off += 2;
+    const credId = buf.subarray(off, off + credIdLen); off += credIdLen;
+    const [coseKey] = cborDecode(buf, off);
+    attested = { credId, coseKey };
+  }
+  return { rpIdHash, flags, signCount, attested };
+}
+async function saveChal(k, challenge) {
+  await run('INSERT INTO wa_chal (k, challenge, exp) VALUES (?,?,?) ON CONFLICT(k) DO UPDATE SET challenge=excluded.challenge, exp=excluded.exp', [k, challenge, now() + 5 * 60 * 1000]);
+}
+async function takeChal(k) {
+  const row = await one('SELECT * FROM wa_chal WHERE k=?', [k]);
+  if (!row) return null;
+  await run('DELETE FROM wa_chal WHERE k=?', [k]);
+  return Number(row.exp) < now() ? null : row.challenge;
+}
+
 const actions = {
   async requestSignupOtp({ email }) {
     email = (email || '').trim().toLowerCase();
@@ -267,7 +315,7 @@ const actions = {
     name = (name || '').trim();
     email = (email || '').trim().toLowerCase();
     const uname = normUsername(username);
-    if (name.length < 2) return { ok: false, error: 'Please enter your name' };
+    if (name.length < 2) name = uname ? uname[0].toUpperCase() + uname.slice(1) : email.split('@')[0];
     if (!validUsername(uname)) return { ok: false, error: 'Please choose a valid username (3-20 characters: letters, numbers, dot or underscore)' };
     if (await usernameTaken(uname)) return { ok: false, error: 'That username is taken — please try another' };
     if (!validEmail(email) || isTempMail(email)) return { ok: false, error: 'Enter a valid email address' };
@@ -322,6 +370,8 @@ const actions = {
     if (fail && t - Number(fail.window_start) < 3600 * 1000 && Number(fail.count) >= 10)
       return { ok: false, error: 'Too many failed attempts — please try again in an hour' };
     const user = await one('SELECT * FROM users WHERE email=?', [email]);
+    if (user && user.provider === 'google')
+      return { ok: false, error: 'This account uses Google sign-in — please use the Google button below' };
     if (!user || !verifyPassword(password || '', user.pass_hash)) {
       const sameWindow = fail && (t - Number(fail.window_start) < 3600 * 1000);
       await run(`INSERT INTO login_fails (email, count, window_start) VALUES (?,?,?)
@@ -332,6 +382,38 @@ const actions = {
     await run('DELETE FROM login_fails WHERE email=?', [email]);
     const pub = { id: Number(user.id), name: user.name, email: user.email, username: user.username || null };
     return { ok: true, token: makeToken(pub), user: pub };
+  },
+
+  async googleAuth({ idToken }) {
+    if (!GOOGLE_CLIENT_ID) return { ok: false, error: 'Google sign-in is not set up yet' };
+    if (!idToken) return { ok: false, error: 'Google sign-in failed — please try again' };
+    let info;
+    try {
+      const resp = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken));
+      info = await resp.json();
+    } catch (e) { return { ok: false, error: 'Could not verify with Google — check your connection' }; }
+    if (!info || info.aud !== GOOGLE_CLIENT_ID || !info.email || info.email_verified !== 'true')
+      return { ok: false, error: 'Google sign-in could not be verified' };
+    const email = String(info.email).toLowerCase();
+    if (isTempMail(email)) return { ok: false, error: 'Disposable emails are not allowed — please use your real email' };
+    let user = await one('SELECT id, name, email, username FROM users WHERE email=?', [email]);
+    let isNew = false;
+    if (!user) {
+      let uname = normUsername(String(email.split('@')[0] || ''));
+      if (!validUsername(uname)) uname = 'user' + crypto.randomInt(1000, 9999);
+      let cand = uname, n = 1;
+      while (await usernameTaken(cand)) { n++; cand = (uname.slice(0, 17) + n).slice(0, 20); }
+      uname = cand;
+      const gname = (info.name || '').trim() || (uname[0].toUpperCase() + uname.slice(1));
+      const ins = await run('INSERT INTO users (name, email, pass_hash, created_at, username, provider) VALUES (?,?,?,?,?,?)',
+        [gname, email, hashPassword(crypto.randomBytes(24).toString('hex')), now(), uname, 'google']);
+      const uid = Number(ins.lastInsertRowid);
+      await run('INSERT INTO user_data (user_id, colls) VALUES (?,?)', [uid, JSON.stringify(['My Collection'])]);
+      user = { id: uid, name: gname, email, username: uname };
+      isNew = true;
+    }
+    const pub = { id: Number(user.id), name: user.name, email: user.email, username: user.username || null };
+    return { ok: true, token: makeToken(pub), user: pub, isNew };
   },
 
   async me({ token }) {
@@ -480,6 +562,102 @@ const actions = {
   },
 
   /* ----- usernames + letters (asli delivery, server par) ----- */
+  async setName({ token, name }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    name = (name || '').trim().replace(/\s+/g, ' ');
+    if (name.length < 2 || name.length > 50) return { ok: false, error: 'Please enter your name (2-50 characters)' };
+    await run('UPDATE users SET name=? WHERE id=?', [name, data.uid]);
+    return { ok: true, name };
+  },
+
+  async webauthnRegOptions({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const user = await one('SELECT id, name, email FROM users WHERE id=?', [data.uid]);
+    if (!user) return { ok: false, error: 'User not found' };
+    const challenge = b64url(crypto.randomBytes(32));
+    await saveChal('reg:' + user.id, challenge);
+    return { ok: true, options: { challenge, user: { id: b64url(Buffer.from(String(user.id))), name: user.email, displayName: user.name },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+      attestation: 'none', timeout: 60000 } };
+  },
+
+  async webauthnRegister({ token, cred }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const chal = await takeChal('reg:' + data.uid);
+    if (!chal) return { ok: false, error: 'Session expired — please try again' };
+    try {
+      const clientData = JSON.parse(b64urlToBuf(cred.response.clientDataJSON).toString('utf8'));
+      if (clientData.type !== 'webauthn.create' || clientData.challenge !== chal) return { ok: false, error: 'Verification failed' };
+      const [att] = cborDecode(b64urlToBuf(cred.response.attestationObject), 0);
+      if (att.fmt !== 'none') return { ok: false, error: 'Unsupported authenticator type' };
+      const auth = parseAuthData(Buffer.from(att.authData));
+      const rpHash = crypto.createHash('sha256').update(new URL(clientData.origin).hostname).digest();
+      if (!auth.rpIdHash.equals(rpHash) || !auth.attested) return { ok: false, error: 'Verification failed' };
+      const cose = auth.attested.coseKey;
+      const jwk = { kty: 'EC', crv: 'P-256', x: b64url(cose['-2']), y: b64url(cose['-3']) };
+      const credId = b64url(auth.attested.credId);
+      await run('UPDATE users SET wa_cred=? WHERE id=?', [JSON.stringify({ credId, jwk, counter: auth.signCount }), data.uid]);
+      return { ok: true };
+    } catch (e) { return { ok: false, error: 'Could not enable fingerprint — please try again' }; }
+  },
+
+  async webauthnStatus({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    const user = await one('SELECT wa_cred FROM users WHERE id=?', [data.uid]);
+    return { ok: true, enabled: !!(user && user.wa_cred) };
+  },
+
+  async webauthnDisable({ token }) {
+    const data = readToken(token);
+    if (!data) return { ok: false, error: 'Login required' };
+    await run('UPDATE users SET wa_cred=NULL WHERE id=?', [data.uid]);
+    return { ok: true };
+  },
+
+  async webauthnAuthOptions({ email }) {
+    email = (email || '').trim().toLowerCase();
+    const user = await one('SELECT id, wa_cred FROM users WHERE email=?', [email]);
+    if (!user || !user.wa_cred) return { ok: false, error: 'Fingerprint is not enabled for this account' };
+    const wc = JSON.parse(user.wa_cred);
+    const challenge = b64url(crypto.randomBytes(32));
+    await saveChal('auth:' + email, challenge);
+    return { ok: true, options: { challenge, allowCredentials: [{ type: 'public-key', id: wc.credId }], userVerification: 'required', timeout: 60000 } };
+  },
+
+  async webauthnAuth({ email, cred }) {
+    email = (email || '').trim().toLowerCase();
+    const user = await one('SELECT * FROM users WHERE email=?', [email]);
+    if (!user || !user.wa_cred) return { ok: false, error: 'Fingerprint is not enabled for this account' };
+    const wc = JSON.parse(user.wa_cred);
+    const chal = await takeChal('auth:' + email);
+    if (!chal) return { ok: false, error: 'Session expired — please try again' };
+    try {
+      if (!cred || cred.id !== wc.credId) return { ok: false, error: 'Verification failed' };
+      const clientDataRaw = b64urlToBuf(cred.response.clientDataJSON);
+      const clientData = JSON.parse(clientDataRaw.toString('utf8'));
+      if (clientData.type !== 'webauthn.get' || clientData.challenge !== chal) return { ok: false, error: 'Verification failed' };
+      const authData = b64urlToBuf(cred.response.authenticatorData);
+      const rpHash = crypto.createHash('sha256').update(new URL(clientData.origin).hostname).digest();
+      if (!authData.subarray(0, 32).equals(rpHash)) return { ok: false, error: 'Verification failed' };
+      const signCount = authData.readUInt32BE(33);
+      const clientHash = crypto.createHash('sha256').update(clientDataRaw).digest();
+      const signed = Buffer.concat([authData, clientHash]);
+      const key = crypto.createPublicKey({ key: wc.jwk, format: 'jwk' });
+      if (!crypto.verify('sha256', signed, key, b64urlToBuf(cred.response.signature)))
+        return { ok: false, error: 'Verification failed' };
+      if (wc.counter && signCount && signCount <= wc.counter) return { ok: false, error: 'Verification failed' };
+      wc.counter = signCount;
+      await run('UPDATE users SET wa_cred=? WHERE id=?', [JSON.stringify(wc), user.id]);
+      const pub = { id: Number(user.id), name: user.name, email: user.email, username: user.username || null };
+      return { ok: true, token: makeToken(pub), user: pub };
+    } catch (e) { return { ok: false, error: 'Fingerprint sign-in failed — please use your password' }; }
+  },
+
   async setUsername({ token, username }) {
     const data = readToken(token);
     if (!data) return { ok: false, error: 'Login required' };
