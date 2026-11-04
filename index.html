@@ -1271,7 +1271,7 @@ async function uploadToCloud(rec){
 }
 
 /* ---------- Server + Auth (Scribly-style) ---------- */
-const API = window.SNAPMARK_API || (location.protocol.startsWith('http') ? location.origin + '/api' : 'http://localhost:8792/api');
+const API = window.SNAPMARK_API || (/(^|\.)web\.app$|(^|\.)firebaseapp\.com$/.test(location.hostname) ? 'https://snapmarkserver.vercel.app/api' : (location.protocol.startsWith('http') ? location.origin + '/api' : 'http://localhost:8792/api'));
 const GOOGLE_CLIENT_ID = '671328811115-3c30cuorrj44lc46948c2bem2ieug36b.apps.googleusercontent.com'; /* Google OAuth Client ID (public) */
 let session = JSON.parse(localStorage.getItem('snapmark_session') || 'null');
 async function api(action, params){
@@ -2226,7 +2226,7 @@ async function renderLetters(){
 }
 async function inviteFriend(){
   const un = session && session.user.username ? '@'+session.user.username : 'me';
-  const text = 'Join me on Snapmark 📮 \u2014 we can send each other letters! My username is '+un+'. Join here: https://snapmarkserver.vercel.app/';
+  const text = 'Join me on Snapmark 📮 \u2014 we can send each other letters! My username is '+un+'. Join here: ' + location.origin + '/';
   if(navigator.share){ try{ await navigator.share({ title:'Snapmark', text }); return; }catch(e){ if(e && e.name==='AbortError') return; } }
   try{ await navigator.clipboard.writeText(text); toast('Invite copied \u2014 paste it anywhere to share 📮'); }
   catch(e){ toast('Share your username '+un+' with a friend'); }
