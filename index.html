@@ -566,6 +566,22 @@
   @media (max-width:360px){ .zoomSel button{ padding:5px 7px; font-size:10.5px; } }
   #acctSheet #bellBadge{ border-color:#f7f2df; }
 
+  /* ===== CALENDAR v30 ===== */
+  .calSticky{ position:sticky; top:0; z-index:6; background:var(--paper); padding-bottom:8px; }
+  .calMonth{ display:flex; align-items:center; justify-content:space-between; font-family:'Playfair Display',serif; font-weight:800; font-size:19px; padding:16px 2px 2px; color:var(--ink); }
+  .calMonth .days{ font-family:'Inter',sans-serif; font-size:11px; font-weight:800; color:#8a6a20; background:#f3ead2; padding:3px 10px; border-radius:99px; }
+  .streakRow{ padding:4px 20px 0; }
+  .streakPill{ display:inline-block; background:#fff3df; border:1.5px solid #f0dcB4; color:#9a5b16; font-weight:800; font-size:12.5px; padding:5px 12px; border-radius:99px; }
+  .todayPill{ display:flex; align-items:center; gap:6px; background:var(--card); border:1.5px solid #e8dfc9; padding:8px 13px; border-radius:99px; font-weight:800; font-size:12.5px; cursor:pointer; color:var(--ink); box-shadow:0 2px 8px rgba(90,70,20,.08); }
+  .todayPill:active{ transform:scale(.95); }
+  #calScreen .scroll{ scroll-snap-type:y proximity; }
+  .calMonthBlock{ scroll-snap-align:start; scroll-margin-top:118px; margin-bottom:30px; }
+  .calMonthBlock:last-child{ margin-bottom:0; }
+  .calGrid .cell img{ inset:17px 7px 6px; width:calc(100% - 14px); height:calc(100% - 23px); border:2px solid #fff; box-shadow:0 2px 6px rgba(20,18,12,.32); border-radius:3px; transform:rotate(var(--rot,-4deg)); }
+  .calGrid .cell img.pasteImg{ animation:pasteIn .34s cubic-bezier(.34,1.3,.64,1) backwards; }
+  @keyframes pasteIn{ 0%{ transform:scale(1.3) rotate(-10deg); opacity:0; } 100%{ transform:scale(1) rotate(var(--rot,-4deg)); opacity:1; } }
+  .cell .plusHint{ position:absolute; inset:15px 0 0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:400; color:rgba(190,105,40,.55); pointer-events:none; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -717,8 +733,11 @@
     <!-- CALENDAR -->
     <section class="screen" id="calScreen">
       <div class="scroll">
-        <div class="calHead"><div class="calBig"><span class="d" id="calDay">01</span><span class="m" id="calMonth">November</span><span class="y" id="calYear">2026</span></div>
-          <div class="iconBtn" id="calTodayBtn" title="Jump to today">🗺️</div></div>
+        <div class="calSticky">
+          <div class="calHead"><div class="calBig"><span class="d" id="calDay">01</span><span class="m" id="calMonth">November</span><span class="y" id="calYear">2026</span></div>
+            <div class="todayPill" id="calTodayBtn" title="Jump to today"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg><span>Today</span></div></div>
+          <div class="streakRow"><span class="streakPill" id="streakPill"></span></div>
+        </div>
         <div class="calWrap" id="calWrap"></div>
       </div>
     </section>
@@ -1639,38 +1658,66 @@ $('#dlBtn').onclick=()=>{ const s=stamps.find(s=>s.id===viewingId); if(!s) retur
   const a=document.createElement('a'); a.href=s.img; a.download='snapmark.png'; a.click(); };
 
 /* ---------- calendar ---------- */
-function renderCalendar(){
-  const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
-  $('#calDay').textContent=String(now.getDate()).padStart(2,'0');
-  $('#calMonth').textContent=now.toLocaleDateString('en-IN',{month:'long'});
-  $('#calYear').textContent=y;
-  const wrap=$('#calWrap'); wrap.innerHTML='';
-  const byDay={}; stamps.forEach(s=>{ (byDay[s.dk]=byDay[s.dk]||[]).push(s); });
-  const dowEl=document.createElement('div'); dowEl.className='dow';
-  dowEl.innerHTML=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div>${d}</div>`).join(''); wrap.appendChild(dowEl);
-  const mkMonth=(yy,mm,label)=>{
-    if(label){ const lab=document.createElement('div'); lab.className='monthLab';
-      lab.innerHTML=`${label} <span>${yy}</span>`; wrap.appendChild(lab); }
-    const grid=document.createElement('div'); grid.className='calGrid';
-    const first=new Date(yy,mm,1).getDay(), days=new Date(yy,mm+1,0).getDate(), prevDays=new Date(yy,mm,0).getDate();
-    for(let i=first-1;i>=0;i--){ const d=prevDays-i; grid.appendChild(cell(yy,mm-1,d,true,byDay)); }
-    for(let d=1; d<=days; d++) grid.appendChild(cell(yy,mm,d,false,byDay, yy===y&&mm===m&&d===now.getDate()));
-    wrap.appendChild(grid);
-  };
-  let cellIdx=0;
-  const cell=(yy,mm,d,dim,byDay,isToday)=>{
-    const c=document.createElement('div'); const key=dateKey(new Date(yy,mm,d));
-    c.className='cell'+(dim?' dim':'')+(isToday?' today':'')+(isToday && !byDay[key] ? ' noStamp':'');
-    c.style.animationDelay=((cellIdx++%14)*0.018)+'s';
-    c.innerHTML=`<span>${d}</span>`;
-    if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; im.className='pasteImg'; im.style.animationDelay=(0.05+((cellIdx%14)*0.018))+'s'; c.appendChild(im); }
-    c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
-    return c;
-  };
-  mkMonth(y, m, null);
-  const nm = m===11?0:m+1, ny = m===11?y+1:y;
-  mkMonth(ny, nm, new Date(ny,nm,1).toLocaleDateString('en-IN',{month:'long'}));
+const MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function stampStreak(){
+  const days=new Set(stamps.map(x=>x.dk)); let n=0; const d=new Date();
+  if(!days.has(dateKey(d))) d.setDate(d.getDate()-1);
+  while(days.has(dateKey(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
 }
+function updateCalHead(y, m){
+  const now=new Date();
+  $('#calMonth').textContent=MNAMES[m]; $('#calYear').textContent=y;
+  $('#calDay').textContent=(y===now.getFullYear() && m===now.getMonth()) ? String(now.getDate()).padStart(2,'0') : '01';
+}
+function syncCalHead(){
+  const sc=$('#calScreen .scroll'); if(!sc) return;
+  const headBottom=sc.getBoundingClientRect().top+118;
+  let best=null, bd=1e9;
+  document.querySelectorAll('.calMonthBlock').forEach(bk=>{ const r=bk.getBoundingClientRect(); const dd=Math.abs(r.top-headBottom); if(dd<bd){ bd=dd; best=bk; } });
+  if(best) updateCalHead(+best.dataset.y, +best.dataset.m);
+}
+function renderCalendar(){
+  const wrap=$('#calWrap'); wrap.innerHTML='';
+  const byDay={}; stamps.forEach(x=>(byDay[x.dk]=byDay[x.dk]||[]).push(x));
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
+  const st=stampStreak(), sp=$('#streakPill');
+  if(sp) sp.textContent = st>0 ? ('\U0001F525 ' + st + (st===1 ? ' day' : ' days') + ' streak') : 'No streak yet \u2014 take a stamp today';
+  const ROTS=[-4,3,-3,5];
+  for(let off=-2; off<=4; off++){
+    const base=new Date(cy, cm+off, 1), y=base.getFullYear(), m=base.getMonth();
+    const block=document.createElement('div'); block.className='calMonthBlock'; block.dataset.y=y; block.dataset.m=m;
+    const cnt=Object.keys(byDay).filter(k=>{ const p=k.split('-'); return +p[0]===y && +p[1]===m+1; }).reduce((a,k)=>a+byDay[k].length,0);
+    block.innerHTML=`<div class="calMonth">${MNAMES[m]} ${y}<span class="days">${cnt ? cnt+' stamps' : 'No stamps yet'}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
+    const grid=document.createElement('div'); grid.className='calGrid';
+    let cellIdx=0;
+    const cell=(yy,mm,d,dim,isToday)=>{
+      const c=document.createElement('div'); const key=dateKey(new Date(yy,mm,d));
+      c.className='cell'+(dim?' dim':'')+(isToday?' today':'')+(isToday && !byDay[key] ? ' noStamp':'');
+      c.style.animationDelay=((cellIdx++%14)*0.018)+'s';
+      c.innerHTML=`<span>${d}</span>`;
+      if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; im.className='pasteImg'; im.style.setProperty('--rot', ROTS[cellIdx%4]+'deg'); im.style.animationDelay=(0.05+((cellIdx%14)*0.018))+'s'; c.appendChild(im); }
+      else if(isToday){ const pl=document.createElement('span'); pl.className='plusHint'; pl.textContent='+'; c.appendChild(pl); }
+      c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
+      return c;
+    };
+    const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), pdays=new Date(y,m,0).getDate();
+    for(let i=first-1;i>=0;i--) grid.appendChild(cell(y,m-1,pdays-i,true,false));
+    for(let d=1; d<=days; d++) grid.appendChild(cell(y,m,d,false, y===cy && m===cm && d===now.getDate()));
+    const tail=(7-(first+days)%7)%7;
+    for(let d=1; d<=tail; d++) grid.appendChild(cell(y,m+1,d,true,false));
+    block.appendChild(grid); wrap.appendChild(block);
+  }
+  updateCalHead(cy, cm);
+  const sc=$('#calScreen .scroll');
+  if(sc && !sc.dataset.syncBound){ sc.dataset.syncBound='1'; let t=null;
+    sc.addEventListener('scroll', ()=>{ clearTimeout(t); t=setTimeout(syncCalHead, 90); }, { passive:true }); }
+  const cur=wrap.querySelector('.calMonthBlock[data-y="'+cy+'"][data-m="'+cm+'"]');
+  if(cur) requestAnimationFrame(()=>cur.scrollIntoView({ block:'start' }));
+}
+$('#calTodayBtn').onclick=()=>{ const n=new Date();
+  const bk=document.querySelector('.calMonthBlock[data-y="'+n.getFullYear()+'"][data-m="'+n.getMonth()+'"]');
+  if(bk) bk.scrollIntoView({ behavior:'smooth', block:'start' }); };
 function openSheet(date, list){
   $('#sheetTitle').textContent=date.toLocaleDateString('en-IN',{weekday:'long', month:'short', day:'numeric'});
   const box=$('#sheetStamps'); box.innerHTML='';
