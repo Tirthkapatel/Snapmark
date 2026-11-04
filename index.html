@@ -485,6 +485,51 @@
   #suUserStat.ok{ color:#2e7d3a; }
   #suUserStat.bad{ color:#b3372a; }
 
+  /* ===== ANIMATION SPEC v28 (Tirth ki table) ===== */
+  #shutter:active{ transform:scale(.92); }
+  #filmView.swapIn{ animation:cutterSwap .25s cubic-bezier(.34,1.45,.64,1); }
+  .segPill div{ transition:all .25s cubic-bezier(.34,1.56,.64,1); }
+  #navPill{ transition:left .3s cubic-bezier(.34,1.45,.64,1), width .3s ease, opacity .25s ease, background .3s; }
+  #tabbar button svg{ transition:transform .3s cubic-bezier(.34,1.4,.64,1); }
+  #tabbar button.sel svg{ transform:scale(1.12); }
+  #tabbar{ transition:background .3s ease; }
+  .screen.on{ animation-duration:.3s; }
+  .folder:active{ transform:scale(.97); }
+  .folder .fimgs img{ transition:transform .35s ease; }
+  .folder:active .fimgs img{ transform:rotate(-2deg) scale(1.04); }
+  .calGrid .cell{ animation:cellIn .3s ease backwards; }
+  @keyframes cellIn{ from{ opacity:0; transform:translateY(5px); } }
+  .calGrid .cell img.pasteImg{ animation:pasteIn .34s cubic-bezier(.34,1.3,.64,1) backwards; }
+  @keyframes pasteIn{ 0%{ transform:scale(1.3) rotate(-7deg); opacity:0; } 100%{ transform:none; opacity:1; } }
+  .calGrid .cell.today.noStamp{ animation:cellIn .3s ease backwards, todayPulse 2s ease-in-out infinite; }
+  @keyframes todayPulse{ 0%,100%{ box-shadow:inset 0 0 0 2px rgba(201,111,46,.35); } 50%{ box-shadow:inset 0 0 0 2.5px rgba(201,111,46,.95); } }
+  .emptyNote .big{ display:inline-block; animation:floaty 3s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(-4px); } 50%{ transform:translateY(4px); } }
+  .skelStamp{ height:86px; border-radius:12px; border:2px dashed #ddd3ba; margin-bottom:10px; position:relative; overflow:hidden; background:#f3edda; }
+  .skelStamp::after{ content:''; position:absolute; inset:0; background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%); animation:shimmer 1.3s infinite; transform:translateX(-100%); }
+  @keyframes shimmer{ to{ transform:translateX(100%); } }
+  .book{ perspective:900px; }
+  .bookFlip{ animation:bookFlip .6s cubic-bezier(.3,.7,.3,1); transform-origin:left center; }
+  @keyframes bookFlip{ 0%{ transform:rotateY(0); } 45%{ transform:rotateY(-30deg); } 100%{ transform:rotateY(0); } }
+  .ringsShake{ animation:ringShake .6s ease; }
+  @keyframes ringShake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(1.5px); } 60%{ transform:translateX(-1.5px); } }
+  #projGrid{ perspective:900px; }
+  .proj.flip{ animation:projFlip .5s cubic-bezier(.3,.7,.3,1); transform-origin:left center; }
+  @keyframes projFlip{ 0%{ transform:rotateY(0); } 50%{ transform:rotateY(-20deg); } 100%{ transform:rotateY(0); } }
+  #sendFx{ position:absolute; inset:0; z-index:120; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  #sendFx.on{ display:flex; }
+  .sendPaper{ width:190px; max-width:70%; background:#fffdf6; border-radius:10px; padding:18px 14px; box-shadow:0 16px 40px rgba(0,0,0,.3); font-family:'Caveat',cursive; font-size:20px; color:#4c463a; text-align:center; position:relative; animation:sendFly 1.2s cubic-bezier(.3,.7,.3,1) forwards; word-break:break-word; }
+  .sendPaper .fxEnv{ font-size:34px; display:block; margin-top:6px; }
+  .sendPaper .fxStamp{ position:absolute; top:-13px; right:-11px; font-size:30px; animation:fxStampIn .3s .55s cubic-bezier(.34,1.56,.64,1) backwards; }
+  @keyframes fxStampIn{ from{ transform:scale(2.2) rotate(-24deg); opacity:0; } }
+  @keyframes sendFly{ 0%{ transform:none; opacity:1; } 25%{ transform:scaleY(.22) scaleX(.92); opacity:1; } 45%{ transform:scale(.74); } 70%{ transform:scale(.74) translateY(0); opacity:1; } 100%{ transform:scale(.74) translateY(-48vh); opacity:0; } }
+  .flyClone{ position:absolute; z-index:130; pointer-events:none; border-radius:8px; box-shadow:0 10px 26px rgba(0,0,0,.35); object-fit:cover; }
+  .rm *, .rm *::after, .rm *::before{ animation-duration:.01s !important; animation-iteration-count:1 !important; transition-duration:.01s !important; }
+  .lite .bookFlip, .lite .proj.flip{ animation:none; }
+  .lite .skelStamp::after{ animation:none; transform:none; }
+  .lite .emptyNote .big{ animation:none; }
+  .lite .calGrid .cell.today.noStamp{ animation:cellIn .01s; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -723,6 +768,11 @@
           <div class="authErr" id="cpErr"></div>
         </div>
         <div class="setCard">
+          <h3>Animations</h3>
+          <div class="sub">Screen transitions, stamp effects and little delights. Turn on Reduce motion if you prefer a calmer, simpler app — it also respects your phone's own reduce-motion setting.</div>
+          <button class="bigBtn" id="rmBtn">Reduce motion: OFF</button>
+        </div>
+        <div class="setCard">
           <h3>Notifications</h3>
           <div class="sub">Stamp backups, security changes and important updates appear under the 🔔 bell. Turn on device notifications to also get them when the app is in the background.</div>
           <button class="bigBtn" id="notifPrefBtn">Enable device notifications</button>
@@ -808,6 +858,9 @@
     <div id="notifList"></div>
     <div class="emptyNote" id="notifEmpty" style="display:none;padding:18px">Nothing here yet — stamp saves, cloud backups and account security updates will appear here.</div>
   </div></div>
+
+  <!-- LETTER SEND FX -->
+  <div id="sendFx"><div class="sendPaper"><span id="sendFxTxt"></span><span class="fxEnv">✉️</span><span class="fxStamp">💮</span></div></div>
 
   <!-- LEGAL VIEW (privacy / terms) -->
   <div id="legalView">
@@ -994,9 +1047,17 @@ let letters = JSON.parse(localStorage.getItem('snapmark_letters')||'{"handle":""
 let activeColl = colls[0]||'My Collection', gridColl='__all', curProj=null, letterTab='recv';
 
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1900); }
+function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+let _AC=null;
+function thud(){ try{ _AC=_AC||new (window.AudioContext||window.webkitAudioContext)(); const t=_AC.currentTime;
+  const o=_AC.createOscillator(), g=_AC.createGain(); o.type='sine';
+  o.frequency.setValueAtTime(160,t); o.frequency.exponentialRampToValueAtTime(55,t+.11);
+  g.gain.setValueAtTime(.20,t); g.gain.exponentialRampToValueAtTime(.001,t+.13);
+  o.connect(g); g.connect(_AC.destination); o.start(t); o.stop(t+.14); }catch(e){} }
 
 /* Low-end phone? -> lite mode: smooth, no heavy blur/pulse effects */
 if((navigator.hardwareConcurrency||8)<=4 || (navigator.deviceMemory||8)<=2) document.documentElement.classList.add('lite');
+if(localStorage.getItem('snapmark_reduce_motion')==='1') document.documentElement.classList.add('rm');
 /* ---------- Cloudinary (photo cloud storage) ---------- */
 const CLOUD={ name:'wemovmw9', preset:'snapmark' };
 async function uploadToCloud(rec){
@@ -1294,7 +1355,7 @@ $('#avatarBtn').onclick=()=>{
 };
 
 /* cutters */
-function setCutter(i){ cutterIdx=(i+3)%3; filmView.classList.remove('sq','wide'); if(CUTCLS[cutterIdx]) filmView.classList.add(CUTCLS[cutterIdx]);
+function setCutter(i){ haptic(6); cutterIdx=(i+3)%3; filmView.classList.remove('sq','wide'); if(CUTCLS[cutterIdx]) filmView.classList.add(CUTCLS[cutterIdx]);
   filmView.classList.remove('swapIn'); void filmView.offsetWidth; filmView.classList.add('swapIn'); }
 let tY=null;
 $('#camScreen').addEventListener('touchstart',e=>tY=e.touches[0].clientY,{passive:true});
@@ -1380,6 +1441,7 @@ function makeFrame(el, isVideo){
 /* ---------- capture + eject animation ---------- */
 $('#shutter').onclick=()=>{
   if(!source){ toast('Turn on the camera or choose a photo first 📸'); return; }
+  haptic(18); thud();
   const metal=$('#metal'); metal.classList.add('press');
   setTimeout(()=>{
     const fl=$('#flash'); fl.style.opacity=.9; setTimeout(()=>fl.style.opacity=0,110);
@@ -1412,16 +1474,35 @@ document.querySelectorAll('.revCard').forEach(cd=>{
     if(pendingStamp) $('#revStamp').src= frameStyle==='none'? pendingStamp.urlNone : pendingStamp.urlTpl; };
 });
 $('#retakeBtn').onclick=()=>showScreen('camScreen');
+function flyToCollection(imgEl, done){
+  const calm = document.documentElement.classList.contains('lite') || document.documentElement.classList.contains('rm');
+  const tabBtns=document.querySelectorAll('#tabbar button');
+  if(calm || !imgEl || !tabBtns[1] || !imgEl.src){ done(); return; }
+  const phone=$('#phone'), pr=phone.getBoundingClientRect();
+  const tb=$('#tabbar'), wasHidden = tb.style.display==='none';
+  if(wasHidden){ tb.style.display='flex'; tb.style.visibility='hidden'; }
+  const r=imgEl.getBoundingClientRect(), t=tabBtns[1].getBoundingClientRect();
+  if(wasHidden){ tb.style.display='none'; tb.style.visibility=''; }
+  const c=document.createElement('img'); c.src=imgEl.src; c.className='flyClone';
+  c.style.left=(r.left-pr.left)+'px'; c.style.top=(r.top-pr.top)+'px'; c.style.width=r.width+'px'; c.style.height=r.height+'px';
+  phone.appendChild(c);
+  const dx=(t.left+t.width/2)-(r.left+r.width/2), dy=(t.top+t.height/2)-(r.top+r.height/2);
+  requestAnimationFrame(()=>{ c.style.transition='transform .58s cubic-bezier(.65,0,.35,1), opacity .58s'; c.style.transform='translate('+dx+'px,'+dy+'px) scale(.07) rotate(-8deg)'; c.style.opacity='.25'; });
+  setTimeout(()=>{ c.remove(); done(); }, 600);
+}
 $('#saveBtn').onclick=()=>{
   if(!pendingStamp) return;
   const coll=DD.revCollSel||activeColl; activeColl=coll; fillCollSelects();
   const rec={ id:Date.now(), img: frameStyle==='none'?pendingStamp.urlNone:pendingStamp.urlTpl,
     label:pendingStamp.label, coll, dk:pendingStamp.dk, cloud:false };
-  stamps.unshift(rec);
-  saveAll(); toast('Saved to "'+coll+'" 📮');
-  gridColl=coll; renderFolders(); openGrid(coll); setNav(1);
-  if(stamps.length===1) notify('🎉','Your first stamp!','You saved your very first stamp to "'+coll+'". Many more to come!');
-  uploadToCloud(rec).then(ok=>{ if(ok) toast('Backed up to the cloud ☁️'); else { rec.failNote=true; saveAll(); notify('☁️','Cloud backup pending','This stamp is safe on your device — the cloud backup will retry automatically when the connection allows.'); } });
+  const finish=()=>{
+    stamps.unshift(rec);
+    saveAll(); toast('Saved to "'+coll+'" 📮'); haptic(12);
+    gridColl=coll; renderFolders(); openGrid(coll); setNav(1);
+    if(stamps.length===1) notify('🎉','Your first stamp!','You saved your very first stamp to "'+coll+'". Many more to come!');
+    uploadToCloud(rec).then(ok=>{ if(ok) toast('Backed up to the cloud \u2601\uFE0F'); else { rec.failNote=true; saveAll(); notify('\u2601\uFE0F','Cloud backup pending','This stamp is safe on your device \u2014 the cloud backup will retry automatically when the connection allows.'); } });
+  };
+  flyToCollection($('#revStamp'), finish);
 };
 
 /* ---------- collections ---------- */
@@ -1492,7 +1573,7 @@ $('#gridBack').onclick=()=>{ showScreen('collScreen', true); setNav(1); };
 function closeViewer(){ const v=$('#viewer'); if(!v.classList.contains('on')) return;
   v.classList.add('closing'); setTimeout(()=>v.classList.remove('on','closing'), 250); }
 $('#closeViewer').onclick=closeViewer;
-$('#delBtn').onclick=()=>{ stamps=stamps.filter(s=>s.id!==viewingId); saveAll();
+$('#delBtn').onclick=()=>{ haptic(12); stamps=stamps.filter(s=>s.id!==viewingId); saveAll();
   if(session) api('deleteStamp', { token: session.token, id: viewingId });
   closeViewer(); openGrid(gridColl); toast('Deleted'); };
 $('#dlBtn').onclick=()=>{ const s=stamps.find(s=>s.id===viewingId); if(!s) return;
@@ -1517,10 +1598,13 @@ function renderCalendar(){
     for(let d=1; d<=days; d++) grid.appendChild(cell(yy,mm,d,false,byDay, yy===y&&mm===m&&d===now.getDate()));
     wrap.appendChild(grid);
   };
+  let cellIdx=0;
   const cell=(yy,mm,d,dim,byDay,isToday)=>{
-    const c=document.createElement('div'); c.className='cell'+(dim?' dim':'')+(isToday?' today':'');
-    const key=dateKey(new Date(yy,mm,d)); c.innerHTML=`<span>${d}</span>`;
-    if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; c.appendChild(im); }
+    const c=document.createElement('div'); const key=dateKey(new Date(yy,mm,d));
+    c.className='cell'+(dim?' dim':'')+(isToday?' today':'')+(isToday && !byDay[key] ? ' noStamp':'');
+    c.style.animationDelay=((cellIdx++%14)*0.018)+'s';
+    c.innerHTML=`<span>${d}</span>`;
+    if(byDay[key]){ const im=new Image(); im.src=byDay[key][0].img; im.className='pasteImg'; im.style.animationDelay=(0.05+((cellIdx%14)*0.018))+'s'; c.appendChild(im); }
     c.onclick=()=>openSheet(new Date(yy,mm,d), byDay[key]||[]);
     return c;
   };
@@ -1554,7 +1638,7 @@ function renderProjects(){
     const d=document.createElement('div'); d.className='proj';
     d.innerHTML=`<div class="cov" style="background:${PATTERNS[p.pat%PATTERNS.length]}"><div class="pt">${p.name}</div></div>
       <div class="meta"><b>${p.name}</b><p>${p.stampIds.length} stamps</p></div>`;
-    d.onclick=()=>openProject(p.id); g.appendChild(d);
+    d.onclick=()=>{ d.classList.add('flip'); setTimeout(()=>openProject(p.id), 240); }; g.appendChild(d);
   });
 }
 async function newProjectFlow(){
@@ -1626,7 +1710,7 @@ async function renderLetters(){
   if(mh) mh.textContent = session && session.user.username
     ? 'Your handle: @'+session.user.username+' — friends send you letters on it 💌'
     : 'Set your username in Settings so friends can send you letters.';
-  body.innerHTML=`<div class="emptyNote" style="padding-top:40px">Loading your letters...</div>`;
+  body.innerHTML='<div class="skelStamp"></div><div class="skelStamp"></div><div class="skelStamp"></div>';
   const r=await api('listLetters', { token: session.token });
   if(r.ok) letterData={ received:r.received, sent:r.sent };
   let html='';
@@ -1669,6 +1753,7 @@ async function composeLetter(){
   const stampImg = stamps.length && typeof stamps[0].img==='string' && stamps[0].img.startsWith('http') ? stamps[0].img : null;
   const s=await api('sendLetter', { token: session.token, to: r.to, body: r.msg, stampImg });
   if(!s.ok){ toast('✉️ '+(s.error||'Letter could not be sent')); return; }
+  haptic(12); playSendFx(r.msg);
   toast('Letter sent to @'+s.to+' ✉️');
   letterTab='sent'; renderLetters();
 }
@@ -1720,6 +1805,7 @@ function updManageCnt(){ $('#manageCnt').textContent=picked.size+' selected'; }
 $('#manageBtn').onclick=()=>setManage(!manageMode);
 $('#mgDoneBtn').onclick=()=>setManage(false);
 $('#mgDelBtn').onclick=()=>{
+  haptic(12);
   if(!picked.size){ toast('Select some stamps first'); return; }
   const ids=[...picked];
   stamps=stamps.filter(s=>!ids.includes(s.id)); saveAll();
@@ -1735,7 +1821,7 @@ $('#mgMoveBtn').onclick=()=>{
 
 /* ---------- settings ---------- */
 async function loadSettings(){
-  refreshNotifPref();
+  refreshNotifPref(); refreshRmBtn();
   if(!session) return;
   $('#setName').textContent=session.user.name||'User';
   const unEl=$('#unStat'); if(unEl) unEl.textContent=session.user.username ? '@'+session.user.username : 'Not set yet';
@@ -1752,6 +1838,8 @@ async function loadSettings(){
 $('#settingsBtn').onclick=()=>{ closeAcct(); showScreen('settingsScreen'); };
 $('#setBack').onclick=()=>{ showScreen('camScreen', true); setNav(0); };
 $('#setLogoutBtn').onclick=()=>$('#logoutBtn').click();
+function refreshRmBtn(){ const b=$('#rmBtn'); if(b) b.textContent='Reduce motion: '+(document.documentElement.classList.contains('rm')?'ON':'OFF'); }
+$('#rmBtn').onclick=()=>{ const on=document.documentElement.classList.toggle('rm'); localStorage.setItem('snapmark_reduce_motion', on?'1':'0'); refreshRmBtn(); toast(on?'Reduce motion on — calmer animations':'Reduce motion off — full animations'); };
 $('#unChangeBtn').onclick=async()=>{
   const v=await askText('Change username', 'New username', '@yourname', 'Save');
   if(!v) return;
@@ -1830,6 +1918,22 @@ document.querySelectorAll('#tabbar button').forEach((b)=>{ b.onclick=()=>{ const
 fillCollSelects(); renderFolders();
 /* login hai to app me ghuso, warna auth screen rahegi */
 if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
+
+function playSendFx(msg){
+  if(document.documentElement.classList.contains('rm')) return;
+  const fx=$('#sendFx'); if(!fx) return;
+  $('#sendFxTxt').textContent=String(msg||'').slice(0,80);
+  const paper=fx.querySelector('.sendPaper');
+  paper.style.animation='none'; void paper.offsetWidth; paper.style.animation='';
+  fx.classList.add('on'); setTimeout(()=>fx.classList.remove('on'), 1250);
+}
+/* scrapbook notebook: tap par page flip + rings shake */
+const bkEl=document.querySelector('.book');
+if(bkEl){ bkEl.style.cursor='pointer'; bkEl.addEventListener('click', ()=>{
+  bkEl.classList.remove('bookFlip'); void bkEl.offsetWidth; bkEl.classList.add('bookFlip');
+  const sp=document.getElementById('spiralSvg');
+  if(sp){ sp.classList.remove('ringsShake'); void sp.offsetWidth; sp.classList.add('ringsShake'); }
+}); }
 
 /* ===== NOTIFICATIONS (jo khabar user tak pahunchni hi chahiye) ===== */
 function notifKey(){ return 'snapmark_notifs_' + (session && session.user ? session.user.id : 'guest'); }
