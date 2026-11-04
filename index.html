@@ -746,6 +746,15 @@
   html.rm .shakeFd{ animation:none; }
   #authScreen .stampCard.flyAway{ transform:translateY(-34px) rotate(-1.3deg); opacity:0; transition:transform .4s ease-in, opacity .4s ease-in; }
 
+  /* ===== v42 CALENDAR + SCRAPBOOK + POSTMARK ===== */
+  .iconGroup.solo{ border-radius:50%; }
+  .iconGroup.solo .igDiv{ display:none; }
+  .iconGroup.solo #bookMenuBtn{ height:40px; }
+  #authScreen .postmark{ top:6px; right:14px; width:64px; height:64px; }
+  #bookCtaBar{ position:absolute; left:20px; right:20px; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); z-index:8; display:none; }
+  #bookCtaBar.on{ display:block; }
+  #bookCtaBar .bigBtn{ margin-top:0; box-shadow:0 12px 26px rgba(23,21,15,.28); }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -915,6 +924,7 @@
         <div class="secLab">PROJECTS</div>
         <div class="projGrid" id="projGrid"></div>
       </div></div>
+      <div id="bookCtaBar"><button class="bigBtn" id="ctaNewProj">+ Create your first project</button></div>
     </section>
 
     <!-- PROJECT PAGE -->
@@ -1936,7 +1946,7 @@ function renderCalendar(){
     const base=new Date(cy, cm+off, 1), y=base.getFullYear(), m=base.getMonth();
     const block=document.createElement('div'); block.className='calMonthBlock'; block.dataset.y=y; block.dataset.m=m;
     const cnt=Object.keys(byDay).filter(k=>{ const p=k.split('-'); return +p[0]===y && +p[1]===m+1; }).reduce((a,k)=>a+byDay[k].length,0);
-    block.innerHTML=`<div class="calMonth"><span></span><span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
+    block.innerHTML=`<div class="calMonth"><span>${MNAMES[m]} ${y}</span><span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
     const grid=document.createElement('div'); grid.className='calGrid';
     let cellIdx=0;
     const cell=(yy,mm,d,dim,isToday)=>{
@@ -2009,9 +2019,12 @@ function createFromTemplate(key){
   projects.unshift(p); saveAll(); renderProjects(); openProject(p.id);
   toast('Project created 📖');
 }
+$('#ctaNewProj').onclick=()=>newProjectFlow();
 function renderProjects(){
   renderBookLine();
   const npb=$('#newProjBtn'); if(npb) npb.style.display = projects.length ? '' : 'none';
+  const ig=$('#bookScreen .iconGroup'); if(ig) ig.classList.toggle('solo', !projects.length);
+  const cb=$('#bookCtaBar'); if(cb) cb.classList.toggle('on', !projects.length);
   const g=$('#projGrid'); g.innerHTML='';
   if(!projects.length){
     g.innerHTML=`<div class="emptyNote" style="grid-column:1/-1"><span class="big">no projects yet</span>Start with a ready template, or create your own.</div>
@@ -2020,9 +2033,8 @@ function renderProjects(){
       <button class="tplCard" data-tpl="birthday"><span class="ti"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" stroke="#8a6d2f" stroke-width="2" stroke-linecap="round"><rect x="9" y="27" width="30" height="12" rx="2.5" fill="#f8eed3"/><rect x="14.5" y="17" width="19" height="10" rx="2.5" fill="#f8eed3"/><path d="M18.5 17v-3.5M24 17v-3.5M29.5 17v-3.5"/><circle cx="18.5" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/><circle cx="24" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/><circle cx="29.5" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/></svg></span>Birthday</button>
       <button class="tplCard" data-tpl="diary"><span class="ti"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" stroke="#8a6d2f" stroke-width="2" stroke-linecap="round"><rect x="13" y="7" width="26" height="34" rx="3" fill="#f8eed3"/><path d="M9.5 13.5h7M9.5 20.5h7M9.5 27.5h7M9.5 34.5h7"/><path d="M26 29.5c-4.2-3.6-6.3-6-6.3-8.4a3.4 3.4 0 0 1 6.3-1.7 3.4 3.4 0 0 1 6.3 1.7c0 2.4-2.1 4.8-6.3 8.4z" fill="#ffd9c4" stroke="#c96f2e" stroke-width="1.6"/></svg></span>Daily diary</button>
     </div>
-    <button class="bigBtn" id="ctaNewProj" style="grid-column:1/-1">+ Create your first project</button>`;
+    `;
     g.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>createFromTemplate(b.dataset.tpl));
-    const c=$('#ctaNewProj'); if(c) c.onclick=newProjectFlow;
     return;
   }
   projects.forEach((p,i)=>{
