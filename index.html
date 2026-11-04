@@ -530,6 +530,42 @@
   .lite .emptyNote .big{ animation:none; }
   .lite .calGrid .cell.today.noStamp{ animation:cellIn .01s; }
 
+  /* ===== CAMERA UI v29 (Tirth ki list) ===== */
+  #metal{ padding:18px 18px 12px; border-radius:36px; }
+  #filmFrame{ padding:10px; }
+  #filmLogo{ margin-top:6px; font-size:9.5px; }
+  #cutterWrap{ width:min(90vw,352px); }
+  .perfCut{ background-image:
+      radial-gradient(circle 7px at 50% 0, transparent 5.4px, rgba(255,255,255,.9) 6px, transparent 7px),
+      radial-gradient(circle 7px at 50% 100%, transparent 5.4px, rgba(255,255,255,.9) 6px, transparent 7px),
+      radial-gradient(circle 7px at 0 50%, transparent 5.4px, rgba(255,255,255,.9) 6px, transparent 7px),
+      radial-gradient(circle 7px at 100% 50%, transparent 5.4px, rgba(255,255,255,.9) 6px, transparent 7px),
+      radial-gradient(circle 6.4px at 50% 0, #0b0b0c 5.6px, transparent 6.4px),
+      radial-gradient(circle 6.4px at 50% 100%, #0b0b0c 5.6px, transparent 6.4px),
+      radial-gradient(circle 6.4px at 0 50%, #0b0b0c 5.6px, transparent 6.4px),
+      radial-gradient(circle 6.4px at 100% 50%, #0b0b0c 5.6px, transparent 6.4px);
+    background-size:13px 13px; background-repeat:repeat-x, repeat-x, repeat-y, repeat-y, repeat-x, repeat-x, repeat-y, repeat-y;
+    background-position:top left, bottom left, top left, top right, top left, bottom left, top left, top right; }
+  #cutterDots{ position:absolute; top:102px; left:50%; transform:translateX(-50%); z-index:6; display:flex; gap:7px; }
+  #cutterDots i{ width:7px; height:7px; border-radius:99px; border:1.6px dashed rgba(240,234,214,.85); box-sizing:border-box; transition:.25s; }
+  #cutterDots i.on{ background:#f0ead6; border-style:solid; transform:scale(1.25); }
+  #flashBtn.off{ opacity:.48; }
+  #flashBtn .slash{ display:none; }
+  #flashBtn.off .slash{ display:block; }
+  .roundDark svg{ display:block; }
+  #tabbar button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; }
+  .tabLab{ font-size:8.5px; font-weight:700; letter-spacing:.2px; line-height:1; margin-top:1px; font-family:'Inter',sans-serif; color:#5c5546; }
+  #tabbar.dark .tabLab{ color:rgba(255,248,231,.72); }
+  #tabbar button.sel .tabLab{ color:#26221c; }
+  #navPill{ height:56px; }
+  #galleryBtn{ overflow:hidden; padding:0; position:relative; }
+  #galThumb{ width:100%; height:100%; object-fit:cover; display:none; border-radius:14px; }
+  .zoomSel{ display:flex; background:rgba(20,18,12,.55); backdrop-filter:blur(6px); border:1.5px solid rgba(255,255,255,.2); border-radius:999px; padding:3px; gap:2px; }
+  .zoomSel button{ border:none; background:transparent; color:#cfc9b8; font-family:'Inter',sans-serif; font-weight:800; font-size:11.5px; padding:5px 10px; border-radius:999px; cursor:pointer; transition:.2s; }
+  .zoomSel button.sel{ background:#fff; color:#191713; }
+  @media (max-width:360px){ .zoomSel button{ padding:5px 7px; font-size:10.5px; } }
+  #acctSheet #bellBadge{ border-color:#f7f2df; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -616,19 +652,17 @@
     <section class="screen on" id="camScreen">
       <div id="camBg"><div class="camEmpty">your moment here</div></div>
       <div class="camTop">
-        <div class="avatar" id="avatarBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.2-3.2 3.8-4.6 7-4.6s5.8 1.4 7 4.6"/></svg></div>
         <button type="button" class="darkPill ddBtn" id="collPill" style="flex:0 1 auto">My Collection ▾</button>
         <div style="flex:1"></div>
-        <div class="roundDark" id="bellBtn" title="Notifications">🔔<span id="bellBadge"></span></div>
-        <div class="roundDark" id="sampleBtn" title="Sample">✦</div>
-        <div class="roundDark" id="camBtn" title="Camera">📷</div>
-        <div class="roundDark" id="flipBtn" title="Switch camera">🔄</div>
+        <div class="roundDark" id="flashBtn" title="Flash"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/><path class="slash" d="M4 4l16 16" stroke="#ff7a5c"/></svg></div>
+        <div class="roundDark" id="flipBtn" title="Switch camera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></div>
       </div>
       <div class="camHint">Swipe up or down to change cutter</div>
+      <div id="cutterDots"><i class="on"></i><i></i><i></i></div>
       <div id="cutterWrap">
         <div id="metal">
           <div id="filmFrame">
-            <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty">your stamp here</div></div><div class="perfCut"></div></div>
+            <div id="filmView" class="stampMode"><div id="mediaBox"><div class="fvEmpty">tap to start camera</div></div><div class="perfCut"></div></div>
           </div>
           <div id="filmLogo">S N A P M A R K</div>
         </div>
@@ -638,9 +672,9 @@
       <div class="camBottom">
         <div class="segPill"><div class="sel" id="modeStamp">STAMP</div><div id="modeFrame">FRAME</div></div>
         <div class="shutterRow">
-          <div class="galBtn" id="galleryBtn">🖼️</div>
+          <div class="galBtn" id="galleryBtn"><svg id="galFallback" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#f0ead6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="M21 15l-5-5-9 9"/></svg><img id="galThumb" alt="Last stamp"></div>
           <button id="shutter"></button>
-          <div class="zoomPill" id="zoomTag">1x</div>
+          <div class="zoomSel" id="zoomSel"><button data-z="0.5">0.5x</button><button data-z="1" class="sel">1x</button><button data-z="2">2x</button></div>
         </div>
       </div>
     </section>
@@ -662,6 +696,8 @@
     <section class="screen" id="collScreen">
       <div class="scroll"><div class="page">
         <div class="headRow"><div class="pageTitle">Collections</div>
+          <div style="flex:1"></div>
+          <div class="avatar" id="avatarBtn" title="Profile"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.2-3.2 3.8-4.6 7-4.6s5.8 1.4 7 4.6"/></svg></div>
           <div class="iconGroup"><button class="igBtn" id="viewGridBtn" title="Grid view">▦</button><span class="igDiv"></span><button class="igBtn sel" id="viewListBtn" title="List view">☰</button></div></div>
         <div id="folderList"></div>
       </div></div>
@@ -819,19 +855,24 @@
   <nav id="tabbar" class="dark">
     <div id="navPill"></div>
     <button data-go="camScreen" class="sel" title="Camera">
-      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="24" r="6.5"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4.2 4.2M32.8 32.8L37 37M37 11l-4.2 4.2M15.2 32.8L11 37"/></svg>
+      <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M41 35a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3h5l3-4.5h12L33 14h5a3 3 0 0 1 3 3z"/><circle cx="24" cy="26" r="6.5"/></svg>
+      <span class="tabLab">Camera</span>
     </button>
     <button data-go="collScreen" title="Collections">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><rect x="8" y="8" width="13" height="13" rx="3"/><rect x="27" y="8" width="13" height="13" rx="3"/><rect x="8" y="27" width="13" height="13" rx="3"/><rect x="27" y="27" width="13" height="13" rx="3"/></svg>
+      <span class="tabLab">Stamps</span>
     </button>
     <button data-go="calScreen" title="Calendar">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round"><rect x="7" y="10" width="34" height="31" rx="4"/><path d="M7 19h34M15 6v8M33 6v8"/><path d="M14 27h4M22 27h4M30 27h4M14 34h4M22 34h4"/></svg>
+      <span class="tabLab">Calendar</span>
     </button>
     <button data-go="bookScreen" title="Scrapbook">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M33 8l7 7L19 36l-8 3 3-8z"/><path d="M29 12l7 7"/></svg>
+      <span class="tabLab">Scrapbook</span>
     </button>
     <button data-go="letterScreen" title="Letters">
       <svg viewBox="0 0 48 48" fill="none" stroke="#23211c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="12" width="36" height="25" rx="3"/><path d="M7 14l17 13L41 14"/></svg>
+      <span class="tabLab">Letters</span>
       <span class="tabBadge" id="letterBadge"></span>
     </button>
   </nav>
@@ -1027,6 +1068,8 @@
     <div class="grab" style="width:42px;height:5px;border-radius:99px;background:#ddd6c6;margin:0 auto 14px"></div>
     <div class="an" id="acctName">User</div>
     <div class="ae" id="acctEmail">email</div>
+    <button class="bigBtn" id="bellBtn" style="background:#23211c;position:relative">Notifications<span id="bellBadge"></span></button>
+    <button class="bigBtn" id="acctSampleBtn" style="background:#ece5d3;color:var(--ink)">✦ Try a sample photo</button>
     <button class="bigBtn" id="settingsBtn" style="background:#23211c">⚙ Settings</button>
     <button class="bigBtn" id="logoutBtn" style="background:#b3372a">Logout</button>
     <button class="bigBtn" id="acctClose" style="background:#ece5d3;color:var(--ink)">Close</button>
@@ -1301,7 +1344,10 @@ function closeAcct(){ const w=$('#acctWrap'); if(!w.classList.contains('on')) re
   w.classList.add('closing'); setTimeout(()=>w.classList.remove('on','closing'), 280); }
 $('#acctClose').onclick=closeAcct;
 $('#acctWrap').onclick=e=>{ if(e.target.id==='acctWrap') closeAcct(); };
-function saveAll(){ try{ localStorage.setItem('snapmark_stamps',JSON.stringify(stamps)); localStorage.setItem('snapmark_colls',JSON.stringify(colls));
+function updGalThumb(){ const im=$('#galThumb'), fb=$('#galFallback'); if(!im) return;
+  if(typeof stamps!=='undefined' && stamps.length){ im.src=stamps[0].img; im.style.display='block'; if(fb) fb.style.display='none'; }
+  else { im.style.display='none'; if(fb) fb.style.display=''; } }
+function saveAll(){ updGalThumb(); try{ localStorage.setItem('snapmark_stamps',JSON.stringify(stamps)); localStorage.setItem('snapmark_colls',JSON.stringify(colls));
   localStorage.setItem('snapmark_projects',JSON.stringify(projects)); localStorage.setItem('snapmark_letters',JSON.stringify(letters)); }catch(e){} }
 function dateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
@@ -1325,17 +1371,21 @@ async function startCam(){
     source={type:'video', el:mb.querySelector('video')};
   }catch(e){ toast('Camera unavailable — use the gallery or the ✦ sample'); }
 }
+let flashOn = localStorage.getItem('snapmark_flash')!=='0';
+function refreshFlashBtn(){ $('#flashBtn').classList.toggle('off', !flashOn); }
+$('#flashBtn').onclick=()=>{ flashOn=!flashOn; localStorage.setItem('snapmark_flash', flashOn?'1':'0'); refreshFlashBtn(); toast(flashOn?'Flash on ⚡':'Flash off'); if(flashOn) haptic(6); };
+refreshFlashBtn();
 $('#flipBtn').onclick=()=>{
   facing = facing==='environment' ? 'user' : 'environment';
   toast(facing==='user' ? 'Front camera 🤳' : 'Rear camera 📷');
   if(stream) startCam();
 };
 function stopCam(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
-$('#camBtn').onclick=startCam;
+$('#mediaBox').addEventListener('click', ()=>{ if(!source) startCam(); });
 $('#galleryBtn').onclick=()=>$('#fileIn').click();
 $('#fileIn').onchange=e=>{ const f=e.target.files[0]; if(!f) return;
   const img=new Image(); img.onload=()=>setSourceImg(img); img.src=URL.createObjectURL(f); };
-$('#sampleBtn').onclick=()=>{
+$('#acctSampleBtn').onclick=()=>{ closeAcct(); showScreen('camScreen'); setNav(0);
   const c=document.createElement('canvas'); c.width=800; c.height=800; const x=c.getContext('2d');
   const g=x.createLinearGradient(0,0,0,800); g.addColorStop(0,'#ffd98e'); g.addColorStop(.55,'#ff9d6c'); g.addColorStop(1,'#e2603f');
   x.fillStyle=g; x.fillRect(0,0,800,800);
@@ -1347,8 +1397,14 @@ $('#sampleBtn').onclick=()=>{
   const img=new Image(); img.onload=()=>setSourceImg(img); img.src=c.toDataURL('image/png');
   toast('Sample photo loaded — now tap the shutter 📸');
 };
-$('#zoomTag').onclick=()=>{ zoom=zoom===1?2:1; $('#zoomTag').textContent=zoom+'x';
-  filmView.querySelectorAll('video,img').forEach(el=>el.style.transform=zoom===2?'scale(1.55)':''); };
+function applyZoomPreview(){
+  filmView.querySelectorAll('video,img').forEach(el=>{
+    const mir = (el.style.cssText||'').includes('scaleX(-1)') ? 'scaleX(-1) ' : '';
+    el.style.transform = mir + (zoom===2 ? 'scale(1.55)' : zoom===0.5 ? 'scale(.72)' : '');
+  });
+}
+function setZoom(z){ zoom=z; document.querySelectorAll('#zoomSel button').forEach(b=>b.classList.toggle('sel', parseFloat(b.dataset.z)===z)); applyZoomPreview(); }
+document.querySelectorAll('#zoomSel button').forEach(b=>b.onclick=()=>setZoom(parseFloat(b.dataset.z)));
 $('#avatarBtn').onclick=()=>{
   if(session){ $('#acctName').textContent=session.user.name; $('#acctEmail').textContent=session.user.email; $('#acctWrap').classList.add('on'); }
   else toast('Please log in first');
@@ -1356,7 +1412,8 @@ $('#avatarBtn').onclick=()=>{
 
 /* cutters */
 function setCutter(i){ haptic(6); cutterIdx=(i+3)%3; filmView.classList.remove('sq','wide'); if(CUTCLS[cutterIdx]) filmView.classList.add(CUTCLS[cutterIdx]);
-  filmView.classList.remove('swapIn'); void filmView.offsetWidth; filmView.classList.add('swapIn'); }
+  filmView.classList.remove('swapIn'); void filmView.offsetWidth; filmView.classList.add('swapIn');
+  document.querySelectorAll('#cutterDots i').forEach((d,j)=>d.classList.toggle('on', j===cutterIdx)); }
 let tY=null;
 $('#camScreen').addEventListener('touchstart',e=>tY=e.touches[0].clientY,{passive:true});
 $('#camScreen').addEventListener('touchend',e=>{ if(tY===null) return; const dy=e.changedTouches[0].clientY-tY;
@@ -1381,7 +1438,9 @@ function rr(x,px,py,w,h,r){ x.beginPath(); x.moveTo(px+r,py); x.arcTo(px+w,py,px
 function cropDraw(x, el, isVideo, dx, dy, dw, dh, zoomF){
   const sw=isVideo?el.videoWidth:el.naturalWidth, sh=isVideo?el.videoHeight:el.naturalHeight;
   const dR=dw/dh; let sW=sw, sH=sw/dR; if(sH>sh){ sH=sh; sW=sh*dR; }
-  sW/=zoomF; sH/=zoomF; const sx=(sw-sW)/2, sy=(sh-sH)/2;
+  sW/=zoomF; sH/=zoomF;
+  if(sW>sw){ const k=sw/sW; sW*=k; sH*=k; } if(sH>sh){ const k=sh/sH; sW*=k; sH*=k; }
+  const sx=(sw-sW)/2, sy=(sh-sH)/2;
   x.save(); rr(x,dx,dy,dw,dh,4); x.clip();
   if(isVideo && facing==='user'){ x.translate(dx*2+dw,0); x.scale(-1,1); }
   x.drawImage(el,sx,sy,sW,sH,dx,dy,dw,dh); x.restore();
@@ -1444,7 +1503,7 @@ $('#shutter').onclick=()=>{
   haptic(18); thud();
   const metal=$('#metal'); metal.classList.add('press');
   setTimeout(()=>{
-    const fl=$('#flash'); fl.style.opacity=.9; setTimeout(()=>fl.style.opacity=0,110);
+    if(flashOn){ const fl=$('#flash'); fl.style.opacity=.9; setTimeout(()=>fl.style.opacity=0,110); }
     const isVideo=source.type==='video', now=new Date();
     const label=(mode==='stamp'?'New stamp · ':'New frame · ')+now.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
     const urlNone = mode==='stamp' ? makeStamp(source.el,isVideo,'none') : makeFrame(source.el,isVideo);
@@ -1917,6 +1976,10 @@ const TABORDER={ camScreen:0, collScreen:1, calScreen:2, bookScreen:3, letterScr
 document.querySelectorAll('#tabbar button').forEach((b)=>{ b.onclick=()=>{ const go=b.dataset.go; showScreen(go, (TABORDER[go]??0) < curNav); }; });
 fillCollSelects(); renderFolders();
 /* login hai to app me ghuso, warna auth screen rahegi */
+/* cutter hint — sirf pehli 3 baar */
+{ const _hc=Number(localStorage.getItem('snapmark_hint_n')||0);
+  if(_hc>=3){ const h=document.querySelector('.camHint'); if(h) h.style.display='none'; }
+  else localStorage.setItem('snapmark_hint_n', String(_hc+1)); }
 if(session){ api('me', { token: session.token }).then(r=>{ if(r.ok) enterApp(); else { session=null; localStorage.removeItem('snapmark_session'); } }); }
 
 function playSendFx(msg){
