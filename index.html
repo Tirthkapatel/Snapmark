@@ -662,6 +662,11 @@
   #collScreen .headRow{ gap:12px; }
   #collScreen .iconGroup{ margin-left:6px; }
 
+  /* ===== v35 POLISH ===== */
+  #tabbar{ background:rgba(255,255,255,.94); backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4); }
+  #tabbar.dark{ background:rgba(22,20,16,.9); }
+  #bookScreen .page{ padding-bottom:150px; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -1768,13 +1773,22 @@ function renderCalendar(){
   const byDay={}; stamps.forEach(x=>(byDay[x.dk]=byDay[x.dk]||[]).push(x));
   const now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
   const st=stampStreak(), sp=$('#streakPill');
-  if(sp) sp.textContent = st>0 ? ('🔥 ' + st + (st===1 ? ' day' : ' days') + ' streak') : 'No streak yet \u2014 take a stamp today';
+  if(sp){
+    if(st>0) sp.textContent='🔥 ' + st + (st===1 ? ' day' : ' days') + ' streak';
+    else{
+      const last=stamps.reduce((a,x)=> (x.dk||'')>a ? x.dk : a, '');
+      if(!last) sp.textContent='No stamps yet — take your first stamp today 🔥';
+      else{ const pp=last.split('-').map(Number);
+        const daysAgo=Math.round((new Date(cy,cm,now.getDate()) - new Date(pp[0],pp[1]-1,pp[2]))/86400000);
+        sp.textContent = daysAgo<=1 ? 'Start a new streak today 🔥' : 'Last stamp: ' + daysAgo + ' days ago. Start a new streak 🔥'; }
+    }
+  }
   const ROTS=[-4,3,-3,5];
   for(let off=-2; off<=4; off++){
     const base=new Date(cy, cm+off, 1), y=base.getFullYear(), m=base.getMonth();
     const block=document.createElement('div'); block.className='calMonthBlock'; block.dataset.y=y; block.dataset.m=m;
     const cnt=Object.keys(byDay).filter(k=>{ const p=k.split('-'); return +p[0]===y && +p[1]===m+1; }).reduce((a,k)=>a+byDay[k].length,0);
-    block.innerHTML=`<div class="calMonth">${MNAMES[m]} ${y}<span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
+    block.innerHTML=`<div class="calMonth"><span></span><span class="days">${stampWord(cnt)}</span></div><div class="dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>`;
     const grid=document.createElement('div'); grid.className='calGrid';
     let cellIdx=0;
     const cell=(yy,mm,d,dim,isToday)=>{
@@ -1849,13 +1863,14 @@ function createFromTemplate(key){
 }
 function renderProjects(){
   renderBookLine();
+  const npb=$('#newProjBtn'); if(npb) npb.style.display = projects.length ? '' : 'none';
   const g=$('#projGrid'); g.innerHTML='';
   if(!projects.length){
     g.innerHTML=`<div class="emptyNote" style="grid-column:1/-1"><span class="big">no projects yet</span>Start with a ready template, or create your own.</div>
     <div class="tplGrid" style="grid-column:1/-1">
-      <button class="tplCard" data-tpl="travel"><span class="ti">\u2708\uFE0F</span>Travel</button>
-      <button class="tplCard" data-tpl="birthday"><span class="ti">🎂</span>Birthday</button>
-      <button class="tplCard" data-tpl="diary"><span class="ti">📔</span>Daily diary</button>
+      <button class="tplCard" data-tpl="travel"><span class="ti"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" stroke="#8a6d2f" stroke-width="2" stroke-linejoin="round"><path d="M7 25 L41 9 L31 39 L23.5 29.5 Z" fill="#f8eed3"/><path d="M23.5 29.5 L41 9"/><path d="M23.5 29.5 L23.5 38" stroke="#c96f2e"/></svg></span>Travel</button>
+      <button class="tplCard" data-tpl="birthday"><span class="ti"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" stroke="#8a6d2f" stroke-width="2" stroke-linecap="round"><rect x="9" y="27" width="30" height="12" rx="2.5" fill="#f8eed3"/><rect x="14.5" y="17" width="19" height="10" rx="2.5" fill="#f8eed3"/><path d="M18.5 17v-3.5M24 17v-3.5M29.5 17v-3.5"/><circle cx="18.5" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/><circle cx="24" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/><circle cx="29.5" cy="10.5" r="1.7" fill="#c96f2e" stroke="none"/></svg></span>Birthday</button>
+      <button class="tplCard" data-tpl="diary"><span class="ti"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" stroke="#8a6d2f" stroke-width="2" stroke-linecap="round"><rect x="13" y="7" width="26" height="34" rx="3" fill="#f8eed3"/><path d="M9.5 13.5h7M9.5 20.5h7M9.5 27.5h7M9.5 34.5h7"/><path d="M26 29.5c-4.2-3.6-6.3-6-6.3-8.4a3.4 3.4 0 0 1 6.3-1.7 3.4 3.4 0 0 1 6.3 1.7c0 2.4-2.1 4.8-6.3 8.4z" fill="#ffd9c4" stroke="#c96f2e" stroke-width="1.6"/></svg></span>Daily diary</button>
     </div>
     <button class="bigBtn" id="ctaNewProj" style="grid-column:1/-1">+ Create your first project</button>`;
     g.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>createFromTemplate(b.dataset.tpl));
