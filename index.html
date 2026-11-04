@@ -780,6 +780,11 @@
   #bootSplash .bsLogo span{ color:var(--accent); }
   #bootSplash .bsSub{ font-size:12.5px; font-weight:600; color:#8b8779; }
 
+  /* ===== v46 APP MODE (inside the Android app) ===== */
+  .appMode .gWrap{ display:none !important; }
+  .appMode #waLoginBtn{ display:none !important; }
+  .appMode #waCard{ display:none !important; }
+
   /* ===== NOTIFICATIONS ===== */
   #bellBtn{ position:relative; }
   #bellBadge{ position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:#d2452c; color:#fff; font-size:10px; font-weight:800; display:none; align-items:center; justify-content:center; border:2px solid #17150f; box-sizing:border-box; }
@@ -858,7 +863,7 @@
     #legalBody{ padding-left:28px; padding-right:28px; }
   }
 </style>
-<script>try{ if(localStorage.getItem('snapmark_session')) document.documentElement.classList.add('bootWait'); }catch(e){}</script>
+<script>try{ if(/SnapmarkApp/.test(navigator.userAgent)) document.documentElement.classList.add('appMode'); if(localStorage.getItem('snapmark_session')) document.documentElement.classList.add('bootWait'); }catch(e){}</script>
 </head>
 <body>
 <div id="phone">
@@ -1017,7 +1022,7 @@
           <button class="bigBtn" id="sqSaveBtn">Save security question</button>
           <div class="authErr" id="sqErr"></div>
         </div>
-        <div class="setCard">
+        <div class="setCard" id="waCard">
           <h3>Fingerprint / Face unlock</h3>
           <div class="sub">Log in with your fingerprint or face on this device — no typing your password every day.</div>
           <div class="setStat" id="waStat" style="display:none"></div>
@@ -2790,6 +2795,7 @@ function onGoogleCredential(resp){
   });
 }
 function initGoogle(){
+  if(document.documentElement.classList.contains('appMode')) return;
   if(!GOOGLE_CLIENT_ID || !window.google || !google.accounts || !google.accounts.id) return;
   document.querySelectorAll('.gWrap').forEach(w=>w.style.display='');
   google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
