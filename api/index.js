@@ -84,7 +84,30 @@ CREATE TABLE IF NOT EXISTS letters (
   stamp_img TEXT,
   created_at INTEGER NOT NULL,
   read_at INTEGER
-);`;
+);
+CREATE TABLE IF NOT EXISTS game_devices (
+  install_id TEXT PRIMARY KEY,
+  model TEXT NOT NULL DEFAULT '',
+  brand TEXT NOT NULL DEFAULT '',
+  android TEXT NOT NULL DEFAULT '',
+  version INTEGER NOT NULL DEFAULT 0,
+  opens INTEGER NOT NULL DEFAULT 0,
+  plays INTEGER NOT NULL DEFAULT 0,
+  first_seen INTEGER NOT NULL,
+  last_seen INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS game_config (
+  id INTEGER PRIMARY KEY,
+  latest_version INTEGER NOT NULL DEFAULT 0,
+  apk_url TEXT NOT NULL DEFAULT '',
+  update_message TEXT NOT NULL DEFAULT '',
+  force_update INTEGER NOT NULL DEFAULT 0,
+  maintenance INTEGER NOT NULL DEFAULT 0,
+  maintenance_message TEXT NOT NULL DEFAULT '',
+  admin_hash TEXT NOT NULL DEFAULT ''
+);
+INSERT OR IGNORE INTO game_config (id) VALUES (1);
+`;
 
 /* ---------- recovery helpers (backup codes + security question) ---------- */
 const CODE_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -150,6 +173,72 @@ function ensureSchema() {
 async function one(sql, args = []) { const r = await db.execute({ sql, args }); return r.rows[0]; }
 async function allRows(sql, args = []) { const r = await db.execute({ sql, args }); return r.rows; }
 async function run(sql, args = []) { const r = await db.execute({ sql, args }); return { lastInsertRowid: r.lastInsertRowid }; }
+
+/* ---------- Machchar Hunter game backend (telemetry + remote config + admin) ---------- */
+async function gameAdminKeyOk(key) {
+  if (!key) return false;
+  const c = await one('SELECT admin_hash FROM game_config WHERE id = 1');
+  if (!c || !c.admin_hash) return false;
+  const h = crypto.createHash('sha256').update(String(key)).digest('hex');
+  const a = Buffer.from(h), b = Buffer.from(c.admin_hash);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+async function gamePingImpl(a) {
+  const installId = String(a.installId || '').slice(0, 64);
+  if (!installId) return { ok: false, error: 'bad_install_id' };
+  const nowMs = Date.now();
+  await run(`INSERT INTO game_devices (install_id, model, brand, android, version, opens, plays, first_seen, last_seen)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(install_id) DO UPDATE SET
+      model = CASE WHEN excluded.model != '' THEN excluded.model ELSE game_devices.model END,
+      brand = CASE WHEN excluded.brand != '' THEN excluded.brand ELSE game_devices.brand END,
+      android = CASE WHEN excluded.android != '' THEN excluded.android ELSE game_devices.android END,
+      version = CASE WHEN excluded.version != 0 THEN excluded.version ELSE game_devices.version END,
+      opens = game_devices.opens + excluded.opens, plays = game_devices.plays + excluded.plays,
+      last_seen = excluded.last_seen`,
+    [installId, String(a.model || '').slice(0, 80), String(a.brand || '').slice(0, 40),
+     String(a.android || '').slice(0, 20), parseInt(a.version, 10) || 0,
+     a.event === 'open' ? 1 : 0, a.event === 'play' ? 1 : 0, nowMs, nowMs]);
+  return { ok: true, recorded: true };
+}
+async function gameConfigImpl() {
+  const c = await one('SELECT latest_version, apk_url, update_message, force_update, maintenance, maintenance_message FROM game_config WHERE id = 1');
+  return { ok: true, config: c || { latest_version: 0, apk_url: '', update_message: '', force_update: 0, maintenance: 0, maintenance_message: '' } };
+}
+async function gameAdminSetupImpl(a) {
+  const c = await one('SELECT admin_hash FROM game_config WHERE id = 1');
+  if (c && c.admin_hash) return { ok: false, error: 'already_set' };
+  const key = String(a.key || '');
+  if (key.length < 8) return { ok: false, error: 'weak_key' };
+  const h = crypto.createHash('sha256').update(key).digest('hex');
+  await run('UPDATE game_config SET admin_hash = ? WHERE id = 1', [h]);
+  return { ok: true, setup: true };
+}
+async function gameAdminStatsImpl(a) {
+  if (!(await gameAdminKeyOk(a.key))) return { ok: false, error: 'unauthorized' };
+  const totals = await one('SELECT COUNT(*) AS installs, COALESCE(SUM(opens), 0) AS opens, COALESCE(SUM(plays), 0) AS plays FROM game_devices');
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const active = await one('SELECT COUNT(*) AS n FROM game_devices WHERE last_seen >= ?', [dayStart.getTime()]);
+  const devices = await allRows('SELECT install_id, model, brand, android, version, opens, plays, first_seen, last_seen FROM game_devices ORDER BY last_seen DESC LIMIT 200');
+  const config = await one('SELECT latest_version, apk_url, update_message, force_update, maintenance, maintenance_message FROM game_config WHERE id = 1');
+  return { ok: true, totals: { installs: totals.installs, opens: totals.opens, plays: totals.plays, activeToday: active.n }, devices, config };
+}
+async function gameAdminSetConfigImpl(a) {
+  if (!(await gameAdminKeyOk(a.key))) return { ok: false, error: 'unauthorized' };
+  const cur = await one('SELECT * FROM game_config WHERE id = 1');
+  const nv = {
+    latest_version: a.latestVersion != null ? (parseInt(a.latestVersion, 10) || 0) : cur.latest_version,
+    apk_url: a.apkUrl != null ? String(a.apkUrl).slice(0, 500) : cur.apk_url,
+    update_message: a.updateMessage != null ? String(a.updateMessage).slice(0, 300) : cur.update_message,
+    force_update: a.forceUpdate != null ? (a.forceUpdate ? 1 : 0) : cur.force_update,
+    maintenance: a.maintenance != null ? (a.maintenance ? 1 : 0) : cur.maintenance,
+    maintenance_message: a.maintenanceMessage != null ? String(a.maintenanceMessage).slice(0, 300) : cur.maintenance_message,
+  };
+  await run('UPDATE game_config SET latest_version = ?, apk_url = ?, update_message = ?, force_update = ?, maintenance = ?, maintenance_message = ? WHERE id = 1',
+    [nv.latest_version, nv.apk_url, nv.update_message, nv.force_update, nv.maintenance, nv.maintenance_message]);
+  return { ok: true, config: nv };
+}
+
 
 const TEMP_MAIL = ['tempmail.com','temp-mail.org','10minutemail.com','guerrillamail.com','mailinator.com',
   'yopmail.com','throwaway.email','getnada.com','maildrop.cc','dispostable.com','sharklasers.com',
@@ -750,8 +839,167 @@ const actions = {
     if (!data) return { ok: false, error: 'Login required' };
     await run('UPDATE letters SET read_at=? WHERE to_id=? AND read_at IS NULL', [now(), data.uid]);
     return { ok: true };
-  }
+  },
+
+  /* Machchar Hunter game (client sends { action, args }) */
+  gamePing: (p) => gamePingImpl(p.args || {}),
+  gameConfig: () => gameConfigImpl(),
+  gameAdminSetup: (p) => gameAdminSetupImpl(p.args || {}),
+  gameAdminStats: (p) => gameAdminStatsImpl(p.args || {}),
+  gameAdminSetConfig: (p) => gameAdminSetConfigImpl(p.args || {})
 };
+
+/* Machchar Hunter admin panel page (served at /game-admin) */
+const GAME_ADMIN_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Machchar Hunter — Admin Panel</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f4f4f6; color: #1c1c1e; }
+  header { background: #ffd11f; padding: 16px; font-size: 20px; font-weight: 800; }
+  header small { display: block; font-size: 12px; font-weight: 600; color: #555; margin-top: 2px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 14px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card h2 { margin: 0 0 10px; font-size: 16px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input[type=text], input[type=password], input[type=number] { flex: 1; min-width: 140px; padding: 10px; border: 1px solid #ccc; border-radius: 9px; font-size: 14px; }
+  button { background: #1c1c1e; color: #fff; border: 0; padding: 10px 16px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  button.yellow { background: #ffd11f; color: #1c1c1e; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat { background: #fff7d6; border-radius: 12px; padding: 12px 6px; text-align: center; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { font-size: 11px; color: #666; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid #eee; }
+  th { color: #666; font-size: 11px; text-transform: uppercase; }
+  label { display: block; font-size: 12px; font-weight: 700; color: #444; margin: 10px 0 4px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-top: 12px; }
+  .check input { width: 20px; height: 20px; }
+  .msg { font-size: 13px; margin-top: 8px; min-height: 16px; }
+  .ok { color: #0a7d28; } .bad { color: #c00; }
+  .maint-on { background: #ffe1e1; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header>Machchar Hunter — Admin Panel<small>Players, updates aur maintenance — sab yahi se control hoga</small></header>
+<div class="wrap">
+
+  <div class="card">
+    <h2>Admin Key</h2>
+    <div class="row">
+      <input type="password" id="key" placeholder="Apna admin key daalo">
+      <button onclick="saveKey()">Save Key</button>
+      <button class="yellow" onclick="load()">Refresh</button>
+    </div>
+    <div class="msg" id="keymsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Players</h2>
+    <div class="stats">
+      <div class="stat"><b id="s_installs">–</b><span>TOTAL PLAYERS</span></div>
+      <div class="stat"><b id="s_plays">–</b><span>GAMES PLAYED</span></div>
+      <div class="stat"><b id="s_opens">–</b><span>APP OPENS</span></div>
+      <div class="stat"><b id="s_today">–</b><span>ACTIVE TODAY</span></div>
+    </div>
+    <div style="overflow-x:auto; margin-top:10px;">
+      <table>
+        <thead><tr><th>Device</th><th>Android</th><th>App Ver</th><th>Opens</th><th>Plays</th><th>Last Seen</th></tr></thead>
+        <tbody id="devices"><tr><td colspan="6">Key daal kar Refresh dabao…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="maintcard">
+    <h2>Update &amp; Maintenance</h2>
+    <label>Latest Version Code (abhi game ka version code 10 hai — naya APK banao to ye badha kar daalo)</label>
+    <input type="number" id="c_version" placeholder="e.g. 11">
+    <label>APK Download Link (update ka APK link)</label>
+    <input type="text" id="c_url" placeholder="https://…">
+    <label>Update Message (players ko dikhega)</label>
+    <input type="text" id="c_umsg" placeholder="e.g. Naya update aa gaya hai!">
+    <div class="check"><input type="checkbox" id="c_force"> Force Update — player bina update kiye nahi khel payega</div>
+    <div class="check"><input type="checkbox" id="c_maint"> Maintenance Mode ON — game band dikhega</div>
+    <label>Maintenance Message</label>
+    <input type="text" id="c_mmsg" placeholder="e.g. Game me kaam chal raha hai, thodi der me wapas aao">
+    <div class="row" style="margin-top:14px;">
+      <button class="yellow" onclick="saveConfig()">Save Settings</button>
+    </div>
+    <div class="msg" id="cfgmsg"></div>
+  </div>
+
+</div>
+<script>
+function $(id) { return document.getElementById(id); }
+function getKey() { return localStorage.getItem('mh_admin_key') || ''; }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function call(action, args) {
+  return fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: action, args: args || {} }) }).then(function (r) { return r.json(); });
+}
+function saveKey() {
+  localStorage.setItem('mh_admin_key', $('key').value.trim());
+  $('keymsg').innerHTML = '<span class="ok">Key save ho gaya. Ab Refresh dabao.</span>';
+  load();
+}
+function fmt(ts) {
+  if (!ts) return '–';
+  try { return new Date(ts).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch (e) { return new Date(ts).toLocaleString(); }
+}
+function load() {
+  var k = getKey();
+  if (!k) { $('keymsg').innerHTML = '<span class="bad">Pehle admin key daalo.</span>'; return; }
+  call('gameAdminStats', { key: k }).then(function (r) {
+    if (!r.ok) { $('keymsg').innerHTML = '<span class="bad">Galat key ya server error: ' + esc(r.error) + '</span>'; return; }
+    $('keymsg').innerHTML = '<span class="ok">Data load ho gaya.</span>';
+    $('s_installs').textContent = r.totals.installs;
+    $('s_plays').textContent = r.totals.plays;
+    $('s_opens').textContent = r.totals.opens;
+    $('s_today').textContent = r.totals.activeToday;
+    var html = '';
+    if (!r.devices.length) html = '<tr><td colspan="6">Abhi tak koi player nahi aaya.</td></tr>';
+    r.devices.forEach(function (d) {
+      html += '<tr><td>' + esc((d.brand ? d.brand + ' ' : '') + d.model) + '</td><td>' + esc(d.android) +
+        '</td><td>' + esc(d.version) + '</td><td>' + d.opens + '</td><td>' + d.plays + '</td><td>' + fmt(d.last_seen) + '</td></tr>';
+    });
+    $('devices').innerHTML = html;
+    var c = r.config || {};
+    $('c_version').value = c.latest_version || '';
+    $('c_url').value = c.apk_url || '';
+    $('c_umsg').value = c.update_message || '';
+    $('c_force').checked = !!c.force_update;
+    $('c_maint').checked = !!c.maintenance;
+    $('c_mmsg').value = c.maintenance_message || '';
+    $('maintcard').className = 'card' + (c.maintenance ? ' maint-on' : '');
+  }).catch(function () { $('keymsg').innerHTML = '<span class="bad">Server se connect nahi ho paya.</span>'; });
+}
+function saveConfig() {
+  var k = getKey();
+  if (!k) { $('cfgmsg').innerHTML = '<span class="bad">Pehle admin key daalo.</span>'; return; }
+  var args = { key: k,
+    latestVersion: parseInt($('c_version').value, 10) || 0,
+    apkUrl: $('c_url').value.trim(),
+    updateMessage: $('c_umsg').value.trim(),
+    forceUpdate: $('c_force').checked,
+    maintenance: $('c_maint').checked,
+    maintenanceMessage: $('c_mmsg').value.trim() };
+  call('gameAdminSetConfig', args).then(function (r) {
+    if (!r.ok) { $('cfgmsg').innerHTML = '<span class="bad">Save nahi hua: ' + esc(r.error) + '</span>'; return; }
+    $('cfgmsg').innerHTML = '<span class="ok">Settings save ho gayi — players ko turant asar dikhega.</span>';
+    load();
+  }).catch(function () { $('cfgmsg').innerHTML = '<span class="bad">Server se connect nahi ho paya.</span>'; });
+}
+$('key').value = getKey();
+if (getKey()) load();
+</script>
+</body>
+</html>
+`;
 
 /* ---------- HTTP handler (local server + Vercel function) ---------- */
 async function handler(req, res) {
@@ -763,6 +1011,10 @@ async function handler(req, res) {
   if (req.method === 'GET' && (pathOnly === '/health' || pathOnly === '/api/health')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, app: 'snapmark-server' }));
+  }
+  if (req.method === 'GET' && pathOnly === '/game-admin') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(GAME_ADMIN_HTML);
   }
   if (req.method === 'GET' && (pathOnly === '/' || pathOnly === '/index.html')) {
     try {
